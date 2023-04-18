@@ -27,18 +27,18 @@ interface LinkGPTDao {
             "FROM detail_table LEFT OUTER JOIN (" +
             "history_table JOIN (" +
             "SELECT name, MAX(time) AS max_time FROM history_table ORDER BY name" +
-            ") temp ON history_table.name = temp.name AND history_table.time = temp.max_time" +
+            ") tmp ON history_table.name = tmp.name AND history_table.time = tmp.max_time" +
             ") ON detail_table.name = history_table.name")
-    fun getBotList(): List<BotBriefData>
+    suspend fun getBotList(): List<BotBriefData>
 
     @Insert
     suspend fun insertHistory(botHistoryData: BotHistoryData)
 
     @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name)")
-    fun getValidHistory(name: String): List<BotHistoryData>
+    suspend fun getValidHistory(name: String): List<BotHistoryData>
 
     @Query("SELECT * FROM detail_table WHERE name = :name")
-    fun getDetail(name: String): List<BotDetailData>
+    suspend fun getDetail(name: String): List<BotDetailData>
 
     @Query("UPDATE detail_table SET summary = :summary, summaryTime = :time WHERE name = :name")
     suspend fun updateSummary(name: String, summary: String, time: Date)
