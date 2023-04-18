@@ -1,7 +1,6 @@
 package com.zxx.linkgpt.data.repository
 
 import android.net.Uri
-import androidx.lifecycle.LiveData
 import com.zxx.linkgpt.data.LinkGPTDao
 import com.zxx.linkgpt.data.models.BotBriefData
 import com.zxx.linkgpt.data.models.BotDetailData
@@ -13,6 +12,10 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.deleteBot(name)
     }
 
+    suspend fun deleteBotHistory(name: String) {
+        LinkGPTDao.deleteBotHistory(name)
+    }
+
     suspend fun newBot(botDetailData: BotDetailData) {
         LinkGPTDao.newBot(botDetailData)
     }
@@ -21,7 +24,7 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.adjustBot(name, temperature, topP, presencePenalty, frequencyPenalty, image)
     }
 
-    suspend fun getBotList(): LiveData<List<BotBriefData>> {
+    fun getBotList(): List<BotBriefData> {
         return LinkGPTDao.getBotList()
     }
 
@@ -29,11 +32,11 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.insertHistory(botHistoryData)
     }
 
-    suspend fun getValidHistory(name: String): LiveData<List<BotHistoryData>> {
+    suspend fun getValidHistory(name: String): List<BotHistoryData> {
         return LinkGPTDao.getValidHistory(name)
     }
 
-    suspend fun getDetail(name: String): LiveData<BotDetailData> {
+    suspend fun getDetail(name: String): List<BotDetailData> {
         return LinkGPTDao.getDetail(name)
     }
 
