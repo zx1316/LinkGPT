@@ -12,14 +12,14 @@ import java.util.Date
 data class BotDetailData(
     @PrimaryKey(autoGenerate = false)
     var name: String,
-    var lastTokens: Int,
-    var totalTokens: Int,
-    var temperature: Double,
-    var topP: Double,
-    var presencePenalty: Double,
-    var frequencyPenalty: Double,
-    var personality: String,
-    var summary: String,
-    var summaryTime: Date,
+    var lastTokens: Int = 0,
+    var totalTokens: Int = 0,
+    var temperature: Float,
+    var topP: Float,
+    var presencePenalty: Float,
+    var frequencyPenalty: Float,
+    var settings: String,
+    var summary: String = "",
+    var summaryTime: Date = Date(0L),
     var image: Uri
 ): Parcelable

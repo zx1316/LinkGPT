@@ -21,9 +21,9 @@ interface LinkGPTDao {
     suspend fun newBot(botDetailData: BotDetailData)
 
     @Query("UPDATE detail_table SET temperature = :temperature, topP = :topP, presencePenalty = :presencePenalty, frequencyPenalty = :frequencyPenalty, image = :image WHERE name = :name")
-    suspend fun adjustBot(name: String, temperature: Double, topP: Double, presencePenalty: Double, frequencyPenalty: Double, image: Uri)
+    suspend fun adjustBot(name: String, temperature: Float, topP: Float, presencePenalty: Float, frequencyPenalty: Float, image: Uri)
 
-    @Query("SELECT detail_table.name, history_table.output, history_table.time, detail_table.image, detail_table.personality " +
+    @Query("SELECT detail_table.name, history_table.output, history_table.time, detail_table.image, detail_table.settings " +
             "FROM detail_table LEFT OUTER JOIN (" +
             "history_table JOIN (" +
             "SELECT name, MAX(time) AS max_time FROM history_table ORDER BY name" +
