@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.navigation.RouteConfig
+import com.zxx.linkgpt.ui.theme.LinkGPTTypography
 import com.zxx.linkgpt.ui.theme.RoundShapes
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import kotlinx.coroutines.Dispatchers
@@ -259,7 +260,7 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
                                     "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
                                     "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
                                     "详情请参考OpenAI的API文档。",
-                            style = MaterialTheme.typography.body2.copy(color = Color.Gray),
+                            style = LinkGPTTypography.body1,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
