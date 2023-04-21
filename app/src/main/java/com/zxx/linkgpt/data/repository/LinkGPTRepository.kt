@@ -1,6 +1,5 @@
 package com.zxx.linkgpt.data.repository
 
-import android.net.Uri
 import com.zxx.linkgpt.data.LinkGPTDao
 import com.zxx.linkgpt.data.models.BotBriefData
 import com.zxx.linkgpt.data.models.BotDetailData
@@ -20,12 +19,30 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.newBot(botDetailData)
     }
 
-    suspend fun adjustBot(name: String, temperature: Float, topP: Float, presencePenalty: Float, frequencyPenalty: Float, image: Uri) {
-        LinkGPTDao.adjustBot(name, temperature, topP, presencePenalty, frequencyPenalty, image)
+    suspend fun adjustBot(
+        name: String,
+        temperature: Float,
+        topP: Float,
+        presencePenalty: Float,
+        frequencyPenalty: Float,
+        useDefaultImage: Boolean
+    ) {
+        LinkGPTDao.adjustBot(
+            name,
+            temperature,
+            topP,
+            presencePenalty,
+            frequencyPenalty,
+            useDefaultImage
+        )
     }
 
     suspend fun getBotList(): List<BotBriefData> {
         return LinkGPTDao.getBotList()
+    }
+
+    suspend fun getNameList(): List<String> {
+        return LinkGPTDao.getNameList()
     }
 
     suspend fun insertHistory(botHistoryData: BotHistoryData) {
@@ -40,7 +57,7 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         return LinkGPTDao.getDetail(name)
     }
 
-    suspend fun updateSummary(name: String, summary: String, time: Date) {
+    suspend fun updateSummary(name: String, summary: String, time: Calendar) {
         LinkGPTDao.updateSummary(name, summary, time)
     }
 }

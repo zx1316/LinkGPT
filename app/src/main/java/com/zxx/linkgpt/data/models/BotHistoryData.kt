@@ -4,15 +4,14 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
-import java.util.Date
+import java.util.*
 
 @Parcelize
-@Entity(tableName="history_table")
-data class BotHistoryData (
-    @PrimaryKey(autoGenerate = true)
-    var id: Int,
+@Entity(tableName = "history_table")
+data class BotHistoryData(
+    @PrimaryKey(autoGenerate = false)
+    var time: Calendar = Calendar.getInstance(),
     var name: String,
-    var input: String,
-    var output: String,
-    var time: Date,
-): Parcelable
+    var input: String? = null,
+    var output: String? = null,
+) : Parcelable

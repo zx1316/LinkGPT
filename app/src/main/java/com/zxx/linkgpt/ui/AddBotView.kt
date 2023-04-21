@@ -2,7 +2,9 @@ package com.zxx.linkgpt.ui
 
 import android.app.Activity
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,21 +16,26 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.zxx.linkgpt.R
-import com.zxx.linkgpt.viewmodel.TestViewModel
+import com.zxx.linkgpt.ui.navigation.RouteConfig
+import com.zxx.linkgpt.ui.theme.RoundShapes
+import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 
 @Composable
-fun AddBot(contentResolver: ContentResolver, navController: NavController) {
-    val vm: TestViewModel = viewModel()
+fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: LinkGPTViewModel) {
     var name by rememberSaveable { mutableStateOf("") }
     var settings by rememberSaveable { mutableStateOf("") }
     var temperature by rememberSaveable { mutableStateOf(1.0F) }
@@ -45,6 +52,7 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController) {
         }
     }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Column {
         TopAppBar(
@@ -52,9 +60,8 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController) {
             navigationIcon = {
                 IconButton(onClick = {
                     navController.popBackStack()
-//                    navController.navigate(RouteConfig.ROUTE_LIST)
                 }) {
-                    Image(
+                    Icon(
                         painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
                         contentDescription = null
                     )
@@ -62,23 +69,43 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController) {
             },
             actions = {
                 IconButton(onClick = {
-                    if ("" != name) {
-                        vm.addBot(
-                            name = name,
-                            image = uri,
-                            settings = settings,
-                            temperature = temperature,
-                            topP = topP,
-                            presencePenalty = presencePenalty,
-                            frequencyPenalty = frequencyPenalty
-                        )
-//                        navController.navigate(RouteConfig.ROUTE_LIST)
-                        navController.popBackStack()
-                    } else {
+                    if ("" == name) {
                         showToast("名称不能为空！", context)
+                    } else {
+                        scope.launch {
+                            if (!vm.check(name)) {
+                                showToast("已经有叫“$name”的机器人了！", context)
+                            } else {
+                                val bitmap = tryReadBitmap(contentResolver, uri)
+                                if (bitmap != null) {
+                                    val bos = ByteArrayOutputStream()
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos)
+                                    withContext(Dispatchers.IO) {
+                                        bos.close()
+                                    }
+                                    context.openFileOutput("$name.png", Context.MODE_PRIVATE).use {
+                                        it.write(bos.toByteArray())
+                                    }
+                                }
+                                vm.addBot(
+                                    name = name,
+                                    useDefaultImage = Uri.EMPTY.equals(uri),
+                                    settings = settings,
+                                    temperature = temperature,
+                                    topP = topP,
+                                    presencePenalty = presencePenalty,
+                                    frequencyPenalty = frequencyPenalty
+                                )
+                                navController.popBackStack(
+                                    route = RouteConfig.ROUTE_LIST,
+                                    inclusive = true
+                                )
+                                navController.navigate(RouteConfig.ROUTE_LIST)
+                            }
+                        }
                     }
                 }) {
-                    Image(
+                    Icon(
                         painter = painterResource(R.drawable.baseline_check_24),
                         contentDescription = null
                     )
@@ -111,20 +138,27 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController) {
                             Image(
                                 painter = painterResource(id = R.drawable.default_bot),
                                 contentDescription = null,
-                                modifier = Modifier.size(128.dp)
+                                modifier = Modifier
+                                    .size(128.dp)
+                                    .clip(RoundShapes.small)
                             )
                         } else {
                             tryReadBitmap(contentResolver, uri)?.asImageBitmap()?.let {
                                 Image(
                                     bitmap = it,
                                     contentDescription = null,
-                                    modifier = Modifier.size(128.dp),
+                                    modifier = Modifier
+                                        .size(128.dp)
+                                        .clip(RoundShapes.small),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                         }
                         Spacer(modifier = Modifier.width(64.dp))
-                        Column(verticalArrangement = Arrangement.Center, modifier = Modifier.height(128.dp)) {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.height(128.dp)
+                        ) {
                             Button(onClick = {
                                 val intent = Intent(Intent.ACTION_PICK)
                                 intent.type = "image/*"
@@ -218,12 +252,13 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController) {
                             alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) "可能会降低输出质量" else null }
                         )
 
-                        Text(text = "参数说明：\n\n" +
-                                "温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n" +
-                                "顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n" +
-                                "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
-                                "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
-                                "详情请参考OpenAI的API文档。",
+                        Text(
+                            text = "参数说明：\n\n" +
+                                    "温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n" +
+                                    "顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n" +
+                                    "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
+                                    "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
+                                    "详情请参考OpenAI的API文档。",
                             style = MaterialTheme.typography.body2.copy(color = Color.Gray),
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
@@ -245,7 +280,7 @@ fun ParaAdjust(
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = paraName, modifier = Modifier.width(116.dp))
-            alert()?.let{
+            alert()?.let {
                 Image(
                     painter = painterResource(id = R.drawable.baseline_warning_20),
                     contentDescription = null
