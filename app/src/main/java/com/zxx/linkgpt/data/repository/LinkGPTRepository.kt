@@ -25,7 +25,6 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         topP: Float,
         presencePenalty: Float,
         frequencyPenalty: Float,
-        useDefaultImage: Boolean
     ) {
         LinkGPTDao.adjustBot(
             name,
@@ -33,7 +32,6 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
             topP,
             presencePenalty,
             frequencyPenalty,
-            useDefaultImage
         )
     }
 
@@ -41,16 +39,16 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         return LinkGPTDao.getBotList()
     }
 
-    suspend fun getNameList(): List<String> {
-        return LinkGPTDao.getNameList()
-    }
-
     suspend fun insertHistory(botHistoryData: BotHistoryData) {
         LinkGPTDao.insertHistory(botHistoryData)
     }
 
-    suspend fun getValidHistory(name: String): List<BotHistoryData> {
-        return LinkGPTDao.getValidHistory(name)
+    suspend fun completeHistory(name: String, output: String) {
+        LinkGPTDao.completeHistory(name, output)
+    }
+
+    suspend fun getHistory(name: String): List<BotHistoryData> {
+        return LinkGPTDao.getHistory(name)
     }
 
     suspend fun getDetail(name: String): List<BotDetailData> {

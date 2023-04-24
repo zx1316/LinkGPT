@@ -19,18 +19,17 @@ interface LinkGPTDao {
     @Insert
     suspend fun newBot(botDetailData: BotDetailData)
 
-    @Query("UPDATE detail_table SET temperature = :temperature, topP = :topP, presencePenalty = :presencePenalty, frequencyPenalty = :frequencyPenalty, useDefaultImage = :useDefaultImage WHERE name = :name")
+    @Query("UPDATE detail_table SET temperature = :temperature, topP = :topP, presencePenalty = :presencePenalty, frequencyPenalty = :frequencyPenalty WHERE name = :name")
     suspend fun adjustBot(
         name: String,
         temperature: Float,
         topP: Float,
         presencePenalty: Float,
         frequencyPenalty: Float,
-        useDefaultImage: Boolean
     )
 
     @Query(
-        "SELECT detail_table.name, history_table.output, history_table.time, detail_table.useDefaultImage " +
+        "SELECT detail_table.name, history_table.output, history_table.time " +
                 "FROM detail_table LEFT OUTER JOIN (" +
                 "history_table JOIN (" +
                 "SELECT name, MAX(time) AS max_time FROM history_table GROUP BY name" +
@@ -39,14 +38,14 @@ interface LinkGPTDao {
     )
     suspend fun getBotList(): List<BotBriefData>
 
-    @Query("SELECT name FROM detail_table")
-    suspend fun getNameList(): List<String>
-
     @Insert
     suspend fun insertHistory(botHistoryData: BotHistoryData)
 
-    @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name) and input IS NOT NULL and output IS NOT NULL")
-    suspend fun getValidHistory(name: String): List<BotHistoryData>
+    @Query("UPDATE history_table SET output = :output WHERE name = :name and time = (SELECT MAX(time) FROM history_table WHERE name = :name)")
+    suspend fun completeHistory(name: String, output: String)
+
+    @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name)")
+    suspend fun getHistory(name: String): List<BotHistoryData>
 
     @Query("SELECT * FROM detail_table WHERE name = :name")
     suspend fun getDetail(name: String): List<BotDetailData>

@@ -43,7 +43,7 @@ val LinkGPTTypography = Typography(
     ),
     h5 = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
+        fontSize = 18.sp,
         letterSpacing = 0.sp
     )
 )

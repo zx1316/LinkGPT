@@ -6,5 +6,4 @@ data class BotBriefData(
     var name: String,
     var output: String?,
     var time: Calendar,
-    var useDefaultImage: Boolean,
 )

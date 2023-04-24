@@ -1,7 +1,6 @@
 package com.zxx.linkgpt.ui
 
 import android.app.Activity
-import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -12,8 +11,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,18 +27,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.zxx.linkgpt.R
-import com.zxx.linkgpt.ui.navigation.RouteConfig
 import com.zxx.linkgpt.ui.theme.LinkGPTTypography
 import com.zxx.linkgpt.ui.theme.RoundShapes
+import com.zxx.linkgpt.ui.util.ShowErrorDialog
+import com.zxx.linkgpt.ui.util.tryReadBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 
 @Composable
-fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: LinkGPTViewModel) {
+fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
     var name by rememberSaveable { mutableStateOf("") }
     var settings by rememberSaveable { mutableStateOf("") }
     var temperature by rememberSaveable { mutableStateOf(1.0F) }
@@ -44,7 +44,9 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
     var presencePenalty by rememberSaveable { mutableStateOf(0.0F) }
     var frequencyPenalty by rememberSaveable { mutableStateOf(0.0F) }
     var expandAdvanced by rememberSaveable { mutableStateOf(false) }
+    var showError by rememberSaveable { mutableStateOf(false) }
     var uri by rememberSaveable { mutableStateOf(Uri.EMPTY) }
+    var errorDetail by rememberSaveable { mutableStateOf("") }
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
@@ -53,7 +55,9 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
         }
     }
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    if (showError) {
+        ShowErrorDialog(detail = errorDetail, callback = { showError = false })
+    }
 
     Column {
         TopAppBar(
@@ -71,38 +75,44 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
             actions = {
                 IconButton(onClick = {
                     if ("" == name) {
-                        showToast("名称不能为空！", context)
+                        errorDetail = "名称不能为空！"
+                        showError = true
+                    } else if ("user" == name) {
+                        errorDetail = "名称不能为\"user\"！"
+                        showError = true
                     } else {
-                        scope.launch {
-                            if (!vm.check(name)) {
-                                showToast("已经有叫“$name”的机器人了！", context)
-                            } else {
-                                val bitmap = tryReadBitmap(contentResolver, uri)
-                                if (bitmap != null) {
-                                    val bos = ByteArrayOutputStream()
-                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos)
-                                    withContext(Dispatchers.IO) {
-                                        bos.close()
-                                    }
-                                    context.openFileOutput("$name.png", Context.MODE_PRIVATE).use {
-                                        it.write(bos.toByteArray())
-                                    }
-                                }
-                                vm.addBot(
-                                    name = name,
-                                    useDefaultImage = Uri.EMPTY.equals(uri),
-                                    settings = settings,
-                                    temperature = temperature,
-                                    topP = topP,
-                                    presencePenalty = presencePenalty,
-                                    frequencyPenalty = frequencyPenalty
-                                )
-                                navController.popBackStack(
-                                    route = RouteConfig.ROUTE_LIST,
-                                    inclusive = true
-                                )
-                                navController.navigate(RouteConfig.ROUTE_LIST)
+                        var flag = true
+                        for (bot in vm.botList.value) {
+                            if (bot.name == name) {
+                                flag = false
+                                errorDetail = "已经有叫“$name”的机器人了！"
+                                showError = true
+                                break
                             }
+                        }
+                        if (flag) {
+                            val bitmap = tryReadBitmap(context.contentResolver, uri)
+                            if (bitmap != null) {
+                                val byteArrayOutputStream = ByteArrayOutputStream()
+                                bitmap.compress(
+                                    Bitmap.CompressFormat.PNG,
+                                    100,
+                                    byteArrayOutputStream
+                                )
+                                byteArrayOutputStream.close()
+                                context.openFileOutput("$name.png", Context.MODE_PRIVATE).use {
+                                    it.write(byteArrayOutputStream.toByteArray())
+                                }
+                            }
+                            vm.addBot(
+                                name = name,
+                                settings = settings,
+                                temperature = temperature,
+                                topP = topP,
+                                presencePenalty = presencePenalty,
+                                frequencyPenalty = frequencyPenalty
+                            )
+                            navController.popBackStack()
                         }
                     }
                 }) {
@@ -114,11 +124,9 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
             }
         )
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
+        LazyColumn(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)) {
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(text = "名称")
@@ -135,22 +143,21 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(text = "头像")
                     Row {
+                        val imageModifier = Modifier
+                            .size(128.dp)
+                            .clip(RoundShapes.small)
                         if (Uri.EMPTY.equals(uri)) {
                             Image(
                                 painter = painterResource(id = R.drawable.default_bot),
                                 contentDescription = null,
-                                modifier = Modifier
-                                    .size(128.dp)
-                                    .clip(RoundShapes.small)
+                                modifier = imageModifier
                             )
                         } else {
-                            tryReadBitmap(contentResolver, uri)?.asImageBitmap()?.let {
+                            tryReadBitmap(context.contentResolver, uri)?.asImageBitmap()?.let {
                                 Image(
                                     bitmap = it,
                                     contentDescription = null,
-                                    modifier = Modifier
-                                        .size(128.dp)
-                                        .clip(RoundShapes.small),
+                                    modifier = imageModifier,
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -185,9 +192,22 @@ fun AddBot(contentResolver: ContentResolver, navController: NavController, vm: L
                             .fillMaxWidth()
                             .height(192.dp),
                         placeholder = {
-                            Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入用第三人称视角描述的设定。")
+                            Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，不超过200字，可以中英混合，英文越多越节省token。")
                         }
                     )
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = {
+                            settings = "xx是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由xxx所创造的数字生命，她会认真配合xxx的要求产生合适的回复进行debug，她聊天时非常热情，回复消息时会用可爱的语气。"
+                        }) {
+                            Text("示例1")
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(onClick = {
+                            settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx’s requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx."
+                        }) {
+                            Text("示例2")
+                        }
+                    }
                 }
             }
 
@@ -300,7 +320,8 @@ fun ParaAdjust(
                 modifier = Modifier.weight(1.0F)
             )
             Text(
-                text = String.format(if (value < 0) "%.2f" else " %.2f", value), modifier = Modifier
+                text = String.format(if (value < 0) "%.2f" else " %.2f", value),
+                modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .width(40.dp)
             )

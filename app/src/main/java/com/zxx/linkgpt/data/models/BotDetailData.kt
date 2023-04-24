@@ -1,12 +1,9 @@
 package com.zxx.linkgpt.data.models
 
-import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.parcelize.Parcelize
 import java.util.*
 
-@Parcelize
 @Entity(tableName = "detail_table")
 data class BotDetailData(
     @PrimaryKey(autoGenerate = false)
@@ -18,7 +15,6 @@ data class BotDetailData(
     var presencePenalty: Float,
     var frequencyPenalty: Float,
     var settings: String,
-    var summary: String = "",
+    var summary: String = "None",
     var summaryTime: Calendar = Calendar.getInstance(),
-    var useDefaultImage: Boolean,
-) : Parcelable
+)
