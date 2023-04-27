@@ -2,6 +2,8 @@ package com.zxx.linkgpt.network
 
 import android.util.Base64
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.zxx.linkgpt.data.models.BotDetailData
+import com.zxx.linkgpt.data.models.BotHistoryData
 import com.zxx.linkgpt.network.models.ReplyData
 import com.zxx.linkgpt.network.models.SubmitData
 import com.zxx.linkgpt.network.models.UserDetailData
@@ -20,8 +22,8 @@ class NetworkHandler {
     }
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(150, TimeUnit.SECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(300, TimeUnit.SECONDS)
         .retryOnConnectionFailure(false)
         .build()
     private val headers = Headers.Builder()
@@ -48,8 +50,14 @@ class NetworkHandler {
      */
     suspend fun checkUser(user: String, host: String, port: Int): UserDetailData? =
         withContext(Dispatchers.IO) {
-            val url = HttpUrl.Builder().host(host).port(port).scheme("http")
-                .addQueryParameter("dat", Base64.encodeToString(user.toByteArray(), Base64.URL_SAFE))
+            // Delete '=' at the end of the base64 string because the server can still parse it.
+            // But why the output of fucking Android Base64.encodeToString has '\n'???
+            val encoded = Base64.encodeToString(user.toByteArray(), Base64.URL_SAFE)
+                .replace("=", "")
+                .replace("\n", "")
+            val url = HttpUrl.Builder().scheme("http").host(host).port(port)
+                .addPathSegment("index.html")
+                .addQueryParameter("dat", encoded)
                 .build()
             val request = Request.Builder().url(url).headers(headers).get().build()
             return@withContext processWebpage(request, UserDetailData::class.java)
@@ -60,22 +68,41 @@ class NetworkHandler {
      * @author zx1316
      * @param host The server's hostname. Can be ipv4/ipv6/domain.
      * @param port The server's port.
-     * @param submit The data sent to the server.
+     * @param user User's name
+     * @param history the chat history of bot from the database.
+     * @param detail the detail of bot from the database.
      * @return If the connection fails, return null. Otherwise return the reply of GPT-3.5-Turbo from the server.
-     * @see SubmitData
      * @see ReplyData
-     * @see SubmitDataGenerator
      */
-    suspend fun getReply(host: String, port: Int, submit: SubmitData): ReplyData? =
+    suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, detail: BotDetailData): ReplyData? =
         withContext(Dispatchers.IO) {
-            val url = HttpUrl.Builder().host(host).port(port).scheme("http").build()
+            val submitData = SubmitData(
+                userName = user,
+                bot = detail.name,
+                summary = detail.summary,
+                settings = detail.settings,
+                updateSummary = detail.lastUsage >= 3000,
+                temperature = detail.temperature,
+                topP = detail.topP,
+                presencePenalty = detail.presencePenalty,
+                frequencyPenalty = detail.frequencyPenalty,
+            )
+            for (chat in history) {
+                if (chat.input != null) {
+                    submitData.history.add(chat.input!!)
+                    if (chat.output != null) {
+                        submitData.history.add(chat.output!!)
+                    }
+                }
+            }
+            val url = HttpUrl.Builder().scheme("http").host(host).port(port).addPathSegment("/index.html").build()
             val out = ByteArrayOutputStream()
             val gzip = GZIPOutputStream(out)
-            MAPPER.writeValue(gzip, submit)
+            MAPPER.writeValue(gzip, submitData)
             gzip.finish()
             val requestBody = MultipartBody.Builder()
                 .addFormDataPart("input", out.toString())
-                .addFormDataPart("upload", "提交")
+                .addFormDataPart("encode", "编码")
                 .build()
             val request = Request.Builder().url(url).headers(headers).post(requestBody).build()
             return@withContext processWebpage(request, ReplyData::class.java)
@@ -96,7 +123,7 @@ class NetworkHandler {
                 val startResult: Pair<Int, String>? = webpage.findAnyOf(List(1) { startMatch })
                 val endResult: Pair<Int, String>? = webpage.findAnyOf(List(1) { endMatch })
                 if (startResult == null || endResult == null) {
-                    reason = "bad_format"
+                    reason = "bad_webpage"
                     return null
                 }
                 val startPos = startResult.first + startMatch.length

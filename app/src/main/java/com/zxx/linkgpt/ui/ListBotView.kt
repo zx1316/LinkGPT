@@ -21,10 +21,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.data.models.BotBriefData
-import com.zxx.linkgpt.ui.navigation.RouteConfig
 import com.zxx.linkgpt.ui.theme.LinkGPTTypography
 import com.zxx.linkgpt.ui.theme.RoundShapes
 import com.zxx.linkgpt.ui.util.TimeDisplayUtil
@@ -33,7 +31,11 @@ import com.zxx.linkgpt.viewmodel.ServerFeedback
 import java.io.FileNotFoundException
 
 @Composable
-fun ListBot(navController: NavController, vm: LinkGPTViewModel) {
+fun ListBot(
+    vm: LinkGPTViewModel,
+    onClickAdd: () -> Unit,
+    onClickConfig: () -> Unit,
+) {
     val botList by vm.botList.collectAsState()
     val chatWith by vm.chattingWith.collectAsState()
     val name by vm.user.collectAsState()
@@ -49,7 +51,7 @@ fun ListBot(navController: NavController, vm: LinkGPTViewModel) {
                 val imageModifier = Modifier
                     .size(40.dp)
                     .clip(RoundShapes.small)
-                    .clickable { navController.navigate(RouteConfig.ROUTE_USER_CONFIG) }
+                    .clickable { onClickConfig() }
                 var bytes = ByteArray(0)
                 try {
                     bytes = context.openFileInput("user.png").readBytes()
@@ -73,7 +75,9 @@ fun ListBot(navController: NavController, vm: LinkGPTViewModel) {
                 if (serverFeedback == ServerFeedback.REFRESHING) {
                     CircularProgressIndicator(
                         color = Color.White,
-                        modifier = Modifier.padding(12.dp).size(24.dp)
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .size(24.dp)
                     )
                 } else {
                     IconButton(onClick = { vm.checkServer() }) {
@@ -84,7 +88,9 @@ fun ListBot(navController: NavController, vm: LinkGPTViewModel) {
                     }
                 }
 
-                IconButton(onClick = { navController.navigate(RouteConfig.ROUTE_ADD) }) {
+                IconButton(onClick = {
+                    onClickAdd()
+                }) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_add_24),
                         contentDescription = null,
@@ -146,7 +152,9 @@ fun BotCard(briefData: BotBriefData, chatWith: String?) {
         }
         .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
-        val imageModifier = Modifier.size(56.dp).clip(RoundShapes.small)
+        val imageModifier = Modifier
+            .size(56.dp)
+            .clip(RoundShapes.small)
         var bytes = ByteArray(0)
         try {
             bytes = context.openFileInput(briefData.name + ".png").readBytes()

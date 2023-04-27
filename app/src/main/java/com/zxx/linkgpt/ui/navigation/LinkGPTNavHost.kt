@@ -1,31 +1,47 @@
 package com.zxx.linkgpt.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.zxx.linkgpt.ui.AddBot
 import com.zxx.linkgpt.ui.Config
 import com.zxx.linkgpt.ui.ListBot
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 
 @Composable
-fun LinkGPTNavHost() {
+fun MyNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier
+) {
     val vm: LinkGPTViewModel = viewModel()
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = RouteConfig.ROUTE_LIST) {
-        composable(RouteConfig.ROUTE_LIST) {
-            ListBot(navController = navController, vm = vm)
+    NavHost(
+        navController = navController,
+        startDestination = ListBot.route,
+        modifier = modifier
+    ) {
+        composable(route = ListBot.route) {
+            ListBot(
+                vm = vm,
+                onClickAdd = { navController.navigate(AddBot.route) },
+                onClickConfig = { navController.navigate(UserConfig.route) }
+            )
         }
 
-        composable(RouteConfig.ROUTE_ADD) {
-            AddBot(navController = navController, vm = vm)
+        composable(route = AddBot.route) {
+            AddBot(
+                vm = vm,
+                onClickBack = { navController.popBackStack() }
+            )
         }
 
-        composable(RouteConfig.ROUTE_USER_CONFIG) {
-            Config(navController = navController, vm = vm)
+        composable(route = UserConfig.route) {
+            Config(
+                vm = vm,
+                onClickBack = { navController.popBackStack() }
+            )
         }
     }
 }

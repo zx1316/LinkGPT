@@ -3,9 +3,19 @@ package com.zxx.linkgpt.network.models
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class SubmitData(
-    var user: String,
+    @JsonProperty("user_name")
+    var userName: String,
+    @JsonProperty("bot")
     var bot: String,
-    var prompt: ArrayList<MessageData>,
+    @JsonProperty("settings")
+    var settings: String,
+    @JsonProperty("history")
+    var history: ArrayList<String> = ArrayList(),
+    @JsonProperty("summary")
+    var summary: String,
+    @JsonProperty("update_summary")
+    var updateSummary: Boolean,
+    @JsonProperty("temperature")
     var temperature: Float,
     @JsonProperty("top_p")
     var topP: Float,

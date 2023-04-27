@@ -47,15 +47,23 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.completeHistory(name, output)
     }
 
+    suspend fun getValidHistory(name: String): List<BotHistoryData> {
+        return LinkGPTDao.getValidHistory(name)
+    }
+
     suspend fun getHistory(name: String): List<BotHistoryData> {
         return LinkGPTDao.getHistory(name)
     }
 
-    suspend fun getDetail(name: String): List<BotDetailData> {
+    suspend fun getDetail(name: String): BotDetailData {
         return LinkGPTDao.getDetail(name)
     }
 
     suspend fun updateSummary(name: String, summary: String, time: Calendar) {
         LinkGPTDao.updateSummary(name, summary, time)
+    }
+
+    suspend fun updateTokens(name: String, lastUsage: Int, totalUsage: Int) {
+        LinkGPTDao.updateTokens(name, lastUsage, totalUsage)
     }
 }

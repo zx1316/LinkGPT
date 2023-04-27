@@ -44,12 +44,18 @@ interface LinkGPTDao {
     @Query("UPDATE history_table SET output = :output WHERE name = :name and time = (SELECT MAX(time) FROM history_table WHERE name = :name)")
     suspend fun completeHistory(name: String, output: String)
 
-    @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name)")
+    @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name) ORDER BY time ASC")
+    suspend fun getValidHistory(name: String): List<BotHistoryData>
+
+    @Query("SELECT * FROM history_table WHERE name = :name ORDER BY time ASC")
     suspend fun getHistory(name: String): List<BotHistoryData>
 
     @Query("SELECT * FROM detail_table WHERE name = :name")
-    suspend fun getDetail(name: String): List<BotDetailData>
+    suspend fun getDetail(name: String): BotDetailData
 
     @Query("UPDATE detail_table SET summary = :summary, summaryTime = :time WHERE name = :name")
     suspend fun updateSummary(name: String, summary: String, time: Calendar)
+
+    @Query("UPDATE detail_table SET lastUsage = :lastUsage, totalUsage = :totalUsage WHERE name = :name")
+    suspend fun updateTokens(name: String, lastUsage: Int, totalUsage: Int)
 }

@@ -23,7 +23,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.theme.RoundShapes
 import com.zxx.linkgpt.ui.util.ShowAlertDialog
@@ -34,7 +33,10 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 @Composable
-fun Config(navController: NavController, vm: LinkGPTViewModel) {
+fun Config(
+    vm: LinkGPTViewModel,
+    onClickBack: () -> Unit
+) {
     val context = LocalContext.current
     var name by rememberSaveable { mutableStateOf(vm.user.value) }
     var host by rememberSaveable { mutableStateOf(vm.host.value) }
@@ -66,8 +68,7 @@ fun Config(navController: NavController, vm: LinkGPTViewModel) {
             }
         }
         vm.setUserConfig(name, host, port.toInt())
-        vm.checkServer()
-        navController.popBackStack()
+        onClickBack()
     }
 
     if (showError) {
@@ -84,7 +85,9 @@ fun Config(navController: NavController, vm: LinkGPTViewModel) {
         TopAppBar(
             title = { Text(text = "设置") },
             navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(onClick = {
+                    onClickBack()
+                }) {
                     Icon(
                         painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
                         contentDescription = null
@@ -117,7 +120,9 @@ fun Config(navController: NavController, vm: LinkGPTViewModel) {
             }
         )
 
-        LazyColumn(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        LazyColumn(modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)) {
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(text = "用户名")
@@ -134,7 +139,9 @@ fun Config(navController: NavController, vm: LinkGPTViewModel) {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     Text(text = "头像")
                     Row {
-                        val imageModifier = Modifier.size(128.dp).clip(RoundShapes.small)
+                        val imageModifier = Modifier
+                            .size(128.dp)
+                            .clip(RoundShapes.small)
                         if (Uri.EMPTY.equals(uri)) {
                             Image(
                                 painter = painterResource(id = R.drawable.default_user),

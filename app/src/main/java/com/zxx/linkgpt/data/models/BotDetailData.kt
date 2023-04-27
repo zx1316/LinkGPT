@@ -8,8 +8,8 @@ import java.util.*
 data class BotDetailData(
     @PrimaryKey(autoGenerate = false)
     var name: String,
-    var lastTokens: Int = 0,
-    var totalTokens: Int = 0,
+    var lastUsage: Int = 0,
+    var totalUsage: Int = 0,
     var temperature: Float,
     var topP: Float,
     var presencePenalty: Float,

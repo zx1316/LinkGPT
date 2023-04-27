@@ -25,7 +25,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.theme.LinkGPTTypography
 import com.zxx.linkgpt.ui.theme.RoundShapes
@@ -36,7 +35,10 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.abs
 
 @Composable
-fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
+fun AddBot(
+    vm: LinkGPTViewModel,
+    onClickBack: () -> Unit
+) {
     var name by rememberSaveable { mutableStateOf("") }
     var settings by rememberSaveable { mutableStateOf("") }
     var temperature by rememberSaveable { mutableStateOf(1.0F) }
@@ -64,7 +66,7 @@ fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
             title = { Text(text = "创建机器人") },
             navigationIcon = {
                 IconButton(onClick = {
-                    navController.popBackStack()
+                    onClickBack()
                 }) {
                     Icon(
                         painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
@@ -112,7 +114,7 @@ fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
                                 presencePenalty = presencePenalty,
                                 frequencyPenalty = frequencyPenalty
                             )
-                            navController.popBackStack()
+                            onClickBack()
                         }
                     }
                 }) {
@@ -192,7 +194,7 @@ fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
                             .fillMaxWidth()
                             .height(192.dp),
                         placeholder = {
-                            Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，不超过200字，可以中英混合，英文越多越节省token。")
+                            Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，言简意赅，可以中英混合，英文占比越多越节省token。")
                         }
                     )
                     Row(modifier = Modifier.fillMaxWidth()) {
@@ -201,7 +203,7 @@ fun AddBot(navController: NavController, vm: LinkGPTViewModel) {
                         }) {
                             Text("示例1")
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Button(onClick = {
                             settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx’s requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx."
                         }) {
