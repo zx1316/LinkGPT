@@ -33,7 +33,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 
 @Composable
-fun Config(
+fun UserConfig(
     vm: LinkGPTViewModel,
     onClickBack: () -> Unit
 ) {
@@ -67,7 +67,7 @@ fun Config(
                 it.write(byteArrayOutputStream.toByteArray())
             }
         }
-        vm.setUserConfig(name, host, port.toInt())
+        vm.updateUserConfig(name, host, port.toInt())
         onClickBack()
     }
 

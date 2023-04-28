@@ -43,8 +43,12 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.insertHistory(botHistoryData)
     }
 
-    suspend fun completeHistory(name: String, output: String) {
-        LinkGPTDao.completeHistory(name, output)
+    suspend fun completeChatOutput(name: String, output: String) {
+        LinkGPTDao.completeChatOutput(name, output)
+    }
+
+    suspend fun changeChatInput(name: String, input: String) {
+        LinkGPTDao.changeChatInput(name, input)
     }
 
     suspend fun getValidHistory(name: String): List<BotHistoryData> {

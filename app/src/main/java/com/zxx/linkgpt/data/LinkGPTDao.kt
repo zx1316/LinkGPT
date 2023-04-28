@@ -42,7 +42,10 @@ interface LinkGPTDao {
     suspend fun insertHistory(botHistoryData: BotHistoryData)
 
     @Query("UPDATE history_table SET output = :output WHERE name = :name and time = (SELECT MAX(time) FROM history_table WHERE name = :name)")
-    suspend fun completeHistory(name: String, output: String)
+    suspend fun completeChatOutput(name: String, output: String)
+
+    @Query("UPDATE history_table SET input = :input WHERE name = :name and time = (SELECT MAX(time) FROM history_table WHERE name = :name)")
+    suspend fun changeChatInput(name: String, input: String)
 
     @Query("SELECT * FROM history_table WHERE name = :name and time > (SELECT summaryTime from detail_table WHERE name = :name) ORDER BY time ASC")
     suspend fun getValidHistory(name: String): List<BotHistoryData>

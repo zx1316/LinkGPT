@@ -35,6 +35,7 @@ fun ListBot(
     vm: LinkGPTViewModel,
     onClickAdd: () -> Unit,
     onClickConfig: () -> Unit,
+    onClickChat: () -> Unit
 ) {
     val botList by vm.botList.collectAsState()
     val chatWith by vm.chattingWith.collectAsState()
@@ -80,7 +81,7 @@ fun ListBot(
                             .size(24.dp)
                     )
                 } else {
-                    IconButton(onClick = { vm.checkServer() }) {
+                    IconButton(onClick = { vm.refreshServerFeedback() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_refresh_24),
                             contentDescription = null
@@ -136,30 +137,36 @@ fun ListBot(
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = botList) { briefData ->
-                BotCard(briefData = briefData, chatWith = chatWith)
+                BotCard(
+                    briefData = briefData,
+                    chatWith = chatWith,
+                    callback = {
+                        vm.refreshDetail(briefData.name)
+                        vm.refreshHistory(briefData.name)
+                        onClickChat()
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun BotCard(briefData: BotBriefData, chatWith: String?) {
+fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
     val context = LocalContext.current
     Row(modifier = Modifier
         .fillMaxWidth()
-        .clickable {
-
-        }
+        .clickable { callback() }
         .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
         val imageModifier = Modifier
             .size(56.dp)
             .clip(RoundShapes.small)
-        var bytes = ByteArray(0)
+        var bytes: ByteArray? = null
         try {
             bytes = context.openFileInput(briefData.name + ".png").readBytes()
         } catch (_: FileNotFoundException) {}
-        if (bytes.isNotEmpty()) {
+        if (bytes != null) {
             Image(
                 bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap(),
                 contentDescription = null,

@@ -34,6 +34,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     private val _maxUsage = MutableStateFlow(0)
     private val _serverFeedback = MutableStateFlow(ServerFeedback.FAILED)
     private val _chattingWith = MutableStateFlow("")
+    private val _detail = MutableStateFlow(BotDetailData())
     private val _history = MutableStateFlow(ArrayList<BotHistoryData>())
 
     val botList = _botList.asStateFlow()
@@ -44,6 +45,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     val maxUsage = _maxUsage.asStateFlow()
     val serverFeedback = _serverFeedback.asStateFlow()
     val chattingWith = _chattingWith.asStateFlow()
+    val detail = _detail.asStateFlow()
     val history = _history.asStateFlow()
 
     fun addBot(
@@ -71,15 +73,15 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     output = "机器人已创建，快来聊天吧！",
                 )
             )
-            getBotList()
+            refreshBotList()
         }
     }
 
-    fun setUserConfig(name: String, host: String, port: Int) {
+    fun updateUserConfig(name: String, host: String, port: Int) {
         _user.value = name
         _host.value = host
         _port.value = port
-        checkServer()
+        refreshServerFeedback()
         sharedPreferences.edit()
             .putString("name", name)
             .putString("host", host)
@@ -87,7 +89,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
             .apply()
     }
 
-    fun checkServer() {
+    fun refreshServerFeedback() {
         if ("" == _host.value) {
             _serverFeedback.value = ServerFeedback.FAILED
         } else {
@@ -111,14 +113,33 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun chat(bot: String, input: String) {
+    // I believe there must be a better way to do this.
+    fun chat(input: String, failedLastTime: Boolean) {
         viewModelScope.launch {
-            _chattingWith.value = bot
-            repository.insertHistory(BotHistoryData(name = bot, input = input))
-            getBotList()
-            _history.value = repository.getHistory(bot) as ArrayList
-            val detail = repository.getDetail(bot)
-            val reply = networkHandler.getReply(_host.value, _port.value, _user.value, repository.getValidHistory(bot), detail)
+            // avoid the change of _detail
+            val detailCopy = BotDetailData(
+                name = _detail.value.name,
+                lastUsage = _detail.value.lastUsage,
+                totalUsage= _detail.value.totalUsage,
+                temperature= _detail.value.temperature,
+                topP = _detail.value.topP,
+                presencePenalty = _detail.value.presencePenalty,
+                frequencyPenalty = _detail.value.frequencyPenalty,
+                settings = _detail.value.settings,
+                summary = _detail.value.summary,
+                summaryTime = _detail.value.summaryTime,
+            )
+            _chattingWith.value = detailCopy.name
+            if (failedLastTime) {
+                repository.changeChatInput(detailCopy.name, input)
+            } else {
+                repository.insertHistory(BotHistoryData(name = detailCopy.name, input = input))
+            }
+            if (_detail.value.name == detailCopy.name) {
+                refreshHistory(detailCopy.name)
+            }
+            refreshBotList()
+            val reply = networkHandler.getReply(_host.value, _port.value, _user.value, repository.getValidHistory(detailCopy.name), detailCopy)
             if (reply == null) {
                 _serverFeedback.value = ServerFeedback.FAILED
             } else if ("unauthorized" == reply.status) {
@@ -132,11 +153,15 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     _serverFeedback.value = ServerFeedback.OK
                     if ("OK" == reply.status) {
                         if ("" != reply.newSummary) {
-                            repository.updateSummary(bot, reply.newSummary, Calendar.getInstance())
+                            repository.updateSummary(detailCopy.name, reply.newSummary, Calendar.getInstance())
                         }
-                        repository.updateTokens(bot, reply.lastUsage, reply.lastUsage + detail.totalUsage)
-                        repository.completeHistory(bot, reply.message)
-                        getBotList()
+                        repository.updateTokens(detailCopy.name, reply.lastUsage, reply.lastUsage + detailCopy.totalUsage)
+                        repository.completeChatOutput(detailCopy.name, reply.message)
+                        if (_detail.value.name == detailCopy.name) {
+                            refreshHistory(detailCopy.name)
+                            refreshDetail(detailCopy.name)
+                        }
+                        refreshBotList()
                     }
                 }
             }
@@ -144,13 +169,19 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun getHistory(name: String) {
+    fun refreshHistory(name: String) {
         viewModelScope.launch {
             _history.value = repository.getHistory(name) as ArrayList
         }
     }
 
-    private fun getBotList() {
+    fun refreshDetail(name: String) {
+        viewModelScope.launch {
+            _detail.value = repository.getDetail(name)
+        }
+    }
+
+    private fun refreshBotList() {
         viewModelScope.launch {
             _botList.value = repository.getBotList() as ArrayList
         }
@@ -160,7 +191,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         _user.value = sharedPreferences.getString("name", "")!!
         _host.value = sharedPreferences.getString("host", "")!!
         _port.value = sharedPreferences.getInt("port", 80)
-        getBotList()
-        checkServer()
+        refreshBotList()
+        refreshServerFeedback()
     }
 }

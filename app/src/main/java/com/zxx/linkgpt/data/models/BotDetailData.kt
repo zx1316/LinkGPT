@@ -7,14 +7,14 @@ import java.util.*
 @Entity(tableName = "detail_table")
 data class BotDetailData(
     @PrimaryKey(autoGenerate = false)
-    var name: String,
+    var name: String = "",
     var lastUsage: Int = 0,
     var totalUsage: Int = 0,
-    var temperature: Float,
-    var topP: Float,
-    var presencePenalty: Float,
-    var frequencyPenalty: Float,
-    var settings: String,
+    var temperature: Float = 1.0F,
+    var topP: Float = 1.0F,
+    var presencePenalty: Float = 0.0F,
+    var frequencyPenalty: Float = 0.0F,
+    var settings: String = "",
     var summary: String = "None",
     var summaryTime: Calendar = Calendar.getInstance(),
 )

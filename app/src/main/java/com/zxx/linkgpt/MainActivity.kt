@@ -8,9 +8,11 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.zxx.linkgpt.ui.navigation.MyNavHost
+import com.zxx.linkgpt.ui.navigation.LinkGPTNavHost
 import com.zxx.linkgpt.ui.theme.LinkGPTTheme
+import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -26,12 +28,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             LinkGPTTheme {
                 val navController = rememberNavController()
+                val vm: LinkGPTViewModel = viewModel()
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    MyNavHost(navController = navController)
+                    LinkGPTNavHost(navController = navController, vm = vm)
                 }
             }
         }
