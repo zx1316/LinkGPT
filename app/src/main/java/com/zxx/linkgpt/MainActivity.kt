@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // A hack way to fix the navigation empty screen bug on Xiaomi phones.
+        // A hack way to fix the navigation empty screen bug in Xiaomi phones.
         // https://stackoverflow.com/questions/71363125/compose-navhost-start-the-white-screen
         lifecycleScope.launch {
             delay(50)

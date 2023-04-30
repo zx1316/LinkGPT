@@ -36,7 +36,9 @@ fun Chat(
     // Test UI
     Column {
         Text(text = detail.name)
-        history[0].output?.let { Text(text = it) }
+        if (history.isNotEmpty()) {
+            history[0].output?.let { Text(text = it) }
+        }
     }
     // Your UI
 }
