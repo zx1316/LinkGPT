@@ -64,7 +64,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     temperature = temperature,
                     topP = topP,
                     presencePenalty = presencePenalty,
-                    frequencyPenalty = frequencyPenalty
+                    frequencyPenalty = frequencyPenalty,
                 )
             )
             repository.insertHistory(
@@ -116,30 +116,32 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     // I believe there must be a better way to do this.
     fun chat(input: String, failedLastTime: Boolean) {
         viewModelScope.launch {
-            // avoid the change of _detail
-            val detailCopy = BotDetailData(
-                name = _detail.value.name,
-                lastUsage = _detail.value.lastUsage,
-                totalUsage= _detail.value.totalUsage,
-                temperature= _detail.value.temperature,
-                topP = _detail.value.topP,
-                presencePenalty = _detail.value.presencePenalty,
-                frequencyPenalty = _detail.value.frequencyPenalty,
-                settings = _detail.value.settings,
-                summary = _detail.value.summary,
-                summaryTime = _detail.value.summaryTime,
-            )
+            // avoid the change of _detail. Shallow copy is ok here.
+            val detailCopy = _detail.value.copy()
             _chattingWith.value = detailCopy.name
+            val calendar = Calendar.getInstance()
             if (failedLastTime) {
-                repository.changeChatInput(detailCopy.name, input)
+                repository.changeChatInput(detailCopy.name, input, calendar)
             } else {
-                repository.insertHistory(BotHistoryData(name = detailCopy.name, input = input))
+                repository.insertHistory(BotHistoryData(name = detailCopy.name, input = input, time = calendar))
             }
             if (_detail.value.name == detailCopy.name) {
-                refreshHistory(detailCopy.name)
+                if (failedLastTime) {
+                    _history.value[_history.value.size - 1].input = input
+                    _history.value[_history.value.size - 1].time = calendar
+                } else {
+                    _history.value.add(BotHistoryData(name = detailCopy.name, input = input, time = calendar))
+                }
             }
             refreshBotList()
-            val reply = networkHandler.getReply(_host.value, _port.value, _user.value, repository.getValidHistory(detailCopy.name), detailCopy)
+            val reply = networkHandler.getReply(
+                host = _host.value,
+                port = _port.value,
+                user = _user.value,
+                history = repository.getValidHistory(detailCopy.name),
+                input = input,
+                detail = detailCopy
+            )
             if (reply == null) {
                 _serverFeedback.value = ServerFeedback.FAILED
             } else if ("unauthorized" == reply.status) {
@@ -153,13 +155,17 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     _serverFeedback.value = ServerFeedback.OK
                     if ("OK" == reply.status) {
                         if ("" != reply.newSummary) {
-                            repository.updateSummary(detailCopy.name, reply.newSummary, Calendar.getInstance())
+                            detailCopy.summary = reply.newSummary
                         }
-                        repository.updateTokens(detailCopy.name, reply.lastUsage, reply.lastUsage + detailCopy.totalUsage)
+                        detailCopy.lastUsage = reply.lastUsage
+                        detailCopy.totalUsage += reply.lastUsage
+                        detailCopy.startTime = reply.startTime
+                        detailCopy.summaryCutoff = reply.summaryCutoff
+                        repository.updateDetail(detailCopy)
                         repository.completeChatOutput(detailCopy.name, reply.message)
                         if (_detail.value.name == detailCopy.name) {
-                            refreshHistory(detailCopy.name)
-                            refreshDetail(detailCopy.name)
+                            _detail.value = detailCopy.copy()
+                            _history.value[_history.value.size - 1].output = reply.message
                         }
                         refreshBotList()
                     }

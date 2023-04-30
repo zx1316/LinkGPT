@@ -1,6 +1,7 @@
 package com.zxx.linkgpt.network.models
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.util.*
 
 data class ReplyData(
     @JsonProperty("status")
@@ -9,6 +10,10 @@ data class ReplyData(
     var message: String,
     @JsonProperty("new_summary")
     var newSummary: String,
+    @JsonProperty("start_time")
+    var startTime: Calendar,
+    @JsonProperty("summary_cutoff")
+    var summaryCutoff: Calendar,
     @JsonProperty("last_usage")
     var lastUsage: Int,
     @JsonProperty("today_usage")

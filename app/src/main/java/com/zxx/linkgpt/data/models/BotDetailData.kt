@@ -16,5 +16,6 @@ data class BotDetailData(
     var frequencyPenalty: Float = 0.0F,
     var settings: String = "",
     var summary: String = "None",
-    var summaryTime: Calendar = Calendar.getInstance(),
+    var startTime: Calendar = Calendar.getInstance(),
+    var summaryCutoff: Calendar = Calendar.getInstance(),
 )

@@ -19,21 +19,21 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.newBot(botDetailData)
     }
 
-    suspend fun adjustBot(
-        name: String,
-        temperature: Float,
-        topP: Float,
-        presencePenalty: Float,
-        frequencyPenalty: Float,
-    ) {
-        LinkGPTDao.adjustBot(
-            name,
-            temperature,
-            topP,
-            presencePenalty,
-            frequencyPenalty,
-        )
-    }
+//    suspend fun adjustBot(
+//        name: String,
+//        temperature: Float,
+//        topP: Float,
+//        presencePenalty: Float,
+//        frequencyPenalty: Float,
+//    ) {
+//        LinkGPTDao.adjustBot(
+//            name,
+//            temperature,
+//            topP,
+//            presencePenalty,
+//            frequencyPenalty,
+//        )
+//    }
 
     suspend fun getBotList(): List<BotBriefData> {
         return LinkGPTDao.getBotList()
@@ -47,8 +47,8 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.completeChatOutput(name, output)
     }
 
-    suspend fun changeChatInput(name: String, input: String) {
-        LinkGPTDao.changeChatInput(name, input)
+    suspend fun changeChatInput(name: String, input: String, time: Calendar) {
+        LinkGPTDao.changeChatInput(name, input, time)
     }
 
     suspend fun getValidHistory(name: String): List<BotHistoryData> {
@@ -63,11 +63,7 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         return LinkGPTDao.getDetail(name)
     }
 
-    suspend fun updateSummary(name: String, summary: String, time: Calendar) {
-        LinkGPTDao.updateSummary(name, summary, time)
-    }
-
-    suspend fun updateTokens(name: String, lastUsage: Int, totalUsage: Int) {
-        LinkGPTDao.updateTokens(name, lastUsage, totalUsage)
+    suspend fun updateDetail(detailData: BotDetailData) {
+        LinkGPTDao.updateDetail(detailData)
     }
 }

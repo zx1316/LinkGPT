@@ -10,10 +10,9 @@ import com.zxx.linkgpt.network.models.UserDetailData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-import java.util.zip.GZIPOutputStream
+import java.util.zip.Deflater
 
 class NetworkHandler {
     companion object {
@@ -74,34 +73,30 @@ class NetworkHandler {
      * @return If the connection fails, return null. Otherwise return the reply of GPT-3.5-Turbo from the server.
      * @see ReplyData
      */
-    suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, detail: BotDetailData): ReplyData? =
+    suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, input: String, detail: BotDetailData): ReplyData? =
         withContext(Dispatchers.IO) {
             val submitData = SubmitData(
                 userName = user,
                 bot = detail.name,
                 summary = detail.summary,
                 settings = detail.settings,
-                updateSummary = detail.lastUsage >= 3000,
+                history = history as ArrayList<BotHistoryData>,
                 temperature = detail.temperature,
                 topP = detail.topP,
                 presencePenalty = detail.presencePenalty,
                 frequencyPenalty = detail.frequencyPenalty,
+                summaryCutoff = detail.summaryCutoff
             )
-            for (chat in history) {
-                if (chat.input != null) {
-                    submitData.history.add(chat.input!!)
-                    if (chat.output != null) {
-                        submitData.history.add(chat.output!!)
-                    }
-                }
-            }
             val url = HttpUrl.Builder().scheme("http").host(host).port(port).addPathSegment("/index.html").build()
-            val out = ByteArrayOutputStream()
-            val gzip = GZIPOutputStream(out)
-            MAPPER.writeValue(gzip, submitData)
-            gzip.finish()
+            // To simplify, we don't use a ByteArrayOutputStream.
+            val deflater = Deflater(6, true)
+            val buf = ByteArray(8192)              // Big enough for our application
+            deflater.setInput(MAPPER.writeValueAsBytes(submitData))
+            deflater.finish()
+            val len = deflater.deflate(buf)
+            deflater.end()
             val requestBody = MultipartBody.Builder()
-                .addFormDataPart("input", out.toString())
+                .addFormDataPart("input", String(buf, 0, len))
                 .addFormDataPart("encode", "编码")
                 .build()
             val request = Request.Builder().url(url).headers(headers).post(requestBody).build()
