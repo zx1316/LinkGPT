@@ -205,7 +205,7 @@ fun AddBot(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(onClick = {
-                            settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx’s requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx."
+                            settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx's requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx."
                         }) {
                             Text("示例2")
                         }
@@ -217,9 +217,7 @@ fun AddBot(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = "高级参数设置")
                     IconButton(onClick = {
@@ -231,7 +229,7 @@ fun AddBot(
                             frequencyPenalty = 0.0F
                         }
                     }) {
-                        Image(
+                        Icon(
                             painter = painterResource(id = if (expandAdvanced) R.drawable.baseline_expand_less_24 else R.drawable.baseline_expand_more_24),
                             contentDescription = null
                         )
