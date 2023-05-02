@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
+import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -20,9 +21,8 @@ fun ShowErrorDialog(detail: String, callback: () -> Unit) {
         confirmButton = {
             TextButton(
                 onClick = callback,
-            ) {
-                Text(text = "确定")
-            }
+                content = { Text("确定") }
+            )
         },
         title = { Text(text = "错误") },
         text = { Text(text = detail) }
@@ -36,16 +36,14 @@ fun ShowAlertDialog(detail: String, cancelCallback: () -> Unit, confirmCallback:
         confirmButton = {
             TextButton(
                 onClick = confirmCallback,
-            ) {
-                Text(text = "确定")
-            }
+                content = { Text(text = "确定") }
+            )
         },
         dismissButton = {
             TextButton(
-                onClick = cancelCallback
-            ) {
-                Text(text = "取消")
-            }
+                onClick = cancelCallback,
+                content = { Text(text = "取消") }
+            )
         },
         title = { Text(text = "警告") },
         text = { Text(text = detail) }
@@ -54,12 +52,13 @@ fun ShowAlertDialog(detail: String, cancelCallback: () -> Unit, confirmCallback:
 
 fun tryReadBitmap(contentResolver: ContentResolver, data: Uri): Bitmap? {
     return try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(contentResolver, data)
             ImageDecoder.decodeBitmap(source)
         } else {
             MediaStore.Images.Media.getBitmap(contentResolver, data)
         }
+        ThumbnailUtils.extractThumbnail(bitmap, 256, 256)
     } catch (e: Exception) {
         null
     }

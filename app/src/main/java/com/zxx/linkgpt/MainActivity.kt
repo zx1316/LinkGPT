@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         // A hack way to fix the navigation empty screen bug in Xiaomi phones.
         // https://stackoverflow.com/questions/71363125/compose-navhost-start-the-white-screen
         lifecycleScope.launch {
-            delay(50)
+            delay(100)
             window.setBackgroundDrawableResource(android.R.color.transparent)
         }
         setContent {
@@ -32,10 +32,9 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    LinkGPTNavHost(navController = navController, vm = vm)
-                }
+                    color = MaterialTheme.colors.background,
+                    content = { LinkGPTNavHost(navController = navController, vm = vm) }
+                )
             }
         }
     }

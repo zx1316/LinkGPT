@@ -6,8 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.zxx.linkgpt.ui.AddBot
 import com.zxx.linkgpt.ui.Chat
-import com.zxx.linkgpt.ui.UserConfig
 import com.zxx.linkgpt.ui.ListBot
+import com.zxx.linkgpt.ui.UserConfig
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 
 @Composable

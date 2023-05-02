@@ -139,7 +139,6 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                 port = _port.value,
                 user = _user.value,
                 history = repository.getValidHistory(detailCopy.name),
-                input = input,
                 detail = detailCopy
             )
             if (reply == null) {

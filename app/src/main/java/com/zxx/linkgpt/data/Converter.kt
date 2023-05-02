@@ -1,7 +1,8 @@
 package com.zxx.linkgpt.data
 
 import androidx.room.TypeConverter
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 class Converter {
     @TypeConverter

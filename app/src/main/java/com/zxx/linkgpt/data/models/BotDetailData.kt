@@ -2,7 +2,7 @@ package com.zxx.linkgpt.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.*
+import java.util.Calendar
 
 @Entity(tableName = "detail_table")
 data class BotDetailData(

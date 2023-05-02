@@ -9,7 +9,11 @@ import com.zxx.linkgpt.network.models.SubmitData
 import com.zxx.linkgpt.network.models.UserDetailData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.HttpUrl
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.zip.Deflater
@@ -73,7 +77,7 @@ class NetworkHandler {
      * @return If the connection fails, return null. Otherwise return the reply of GPT-3.5-Turbo from the server.
      * @see ReplyData
      */
-    suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, input: String, detail: BotDetailData): ReplyData? =
+    suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, detail: BotDetailData): ReplyData? =
         withContext(Dispatchers.IO) {
             val submitData = SubmitData(
                 userName = user,

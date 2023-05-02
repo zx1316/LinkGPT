@@ -8,9 +8,27 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme.colors
+import androidx.compose.material.MaterialTheme.typography
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Slider
+import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,13 +44,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.zxx.linkgpt.R
-import com.zxx.linkgpt.ui.theme.LinkGPTTypography
-import com.zxx.linkgpt.ui.theme.RoundShapes
 import com.zxx.linkgpt.ui.util.ShowErrorDialog
 import com.zxx.linkgpt.ui.util.tryReadBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import java.io.ByteArrayOutputStream
 import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.sign
 
 @Composable
 fun AddBot(
@@ -61,233 +79,242 @@ fun AddBot(
         ShowErrorDialog(detail = errorDetail, callback = { showError = false })
     }
 
-    Column {
-        TopAppBar(
-            title = { Text(text = "创建机器人") },
-            navigationIcon = {
-                IconButton(onClick = {
-                    onClickBack()
-                }) {
-                    Icon(
-                        painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
-                        contentDescription = null
-                    )
-                }
-            },
-            actions = {
-                IconButton(onClick = {
-                    if ("" == name) {
-                        errorDetail = "名称不能为空！"
-                        showError = true
-                    } else if ("user" == name) {
-                        errorDetail = "名称不能为\"user\"！"
-                        showError = true
-                    } else {
-                        var flag = true
-                        for (bot in vm.botList.value) {
-                            if (bot.name == name) {
-                                flag = false
-                                errorDetail = "已经有叫“$name”的机器人了！"
-                                showError = true
-                                break
-                            }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                backgroundColor = colors.primaryVariant,
+                contentColor = Color.White,
+                title = { Text(text = "创建机器人") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onClickBack,
+                        content = {
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_arrow_back_ios_24),
+                                contentDescription = null
+                            )
                         }
-                        if (flag) {
-                            val bitmap = tryReadBitmap(context.contentResolver, uri)
-                            if (bitmap != null) {
-                                val byteArrayOutputStream = ByteArrayOutputStream()
-                                bitmap.compress(
-                                    Bitmap.CompressFormat.PNG,
-                                    100,
-                                    byteArrayOutputStream
-                                )
-                                byteArrayOutputStream.close()
-                                context.openFileOutput("$name.png", Context.MODE_PRIVATE).use {
-                                    it.write(byteArrayOutputStream.toByteArray())
+                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if ("" == name) {
+                                errorDetail = "名称不能为空！"
+                                showError = true
+                            } else if ("user" == name) {
+                                errorDetail = "名称不能为\"user\"！"
+                                showError = true
+                            } else {
+                                var flag = true
+                                for (bot in vm.botList.value) {
+                                    if (bot.name == name) {
+                                        flag = false
+                                        errorDetail = "已经有叫“$name”的机器人了！"
+                                        showError = true
+                                        break
+                                    }
+                                }
+                                if (flag) {
+                                    val bitmap = tryReadBitmap(context.contentResolver, uri)
+                                    if (bitmap != null) {
+                                        val byteArrayOutputStream = ByteArrayOutputStream()
+                                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+                                        byteArrayOutputStream.close()
+                                        context.openFileOutput("$name.png", Context.MODE_PRIVATE).use {
+                                            it.write(byteArrayOutputStream.toByteArray())
+                                        }
+                                    }
+                                    vm.addBot(
+                                        name = name,
+                                        settings = settings,
+                                        temperature = rounding(temperature),
+                                        topP = rounding(topP),
+                                        presencePenalty = rounding(presencePenalty),
+                                        frequencyPenalty = rounding(frequencyPenalty)
+                                    )
+                                    onClickBack()
                                 }
                             }
-                            vm.addBot(
-                                name = name,
-                                settings = settings,
-                                temperature = temperature,
-                                topP = topP,
-                                presencePenalty = presencePenalty,
-                                frequencyPenalty = frequencyPenalty
+                        },
+                        content = {
+                            Icon(
+                                painter = painterResource(R.drawable.baseline_check_24),
+                                tint = Color.White,
+                                contentDescription = null
                             )
-                            onClickBack()
                         }
+                    )
+                }
+            )
+        },
+        content = { paddingValues ->
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues = paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                item {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(text = "名称")
+                        TextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                }) {
-                    Icon(
-                        painter = painterResource(R.drawable.baseline_check_24),
-                        contentDescription = null
-                    )
                 }
-            }
-        )
 
-        LazyColumn(modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)) {
-            item {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(text = "名称")
-                    TextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            item {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(text = "头像")
-                    Row {
-                        val imageModifier = Modifier
-                            .size(128.dp)
-                            .clip(RoundShapes.small)
-                        if (Uri.EMPTY.equals(uri)) {
-                            Image(
-                                painter = painterResource(id = R.drawable.default_bot),
-                                contentDescription = null,
-                                modifier = imageModifier
-                            )
-                        } else {
-                            tryReadBitmap(context.contentResolver, uri)?.asImageBitmap()?.let {
+                item {
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(text = "头像")
+                        Row {
+                            val imageModifier = Modifier
+                                .size(128.dp)
+                                .clip(RoundedCornerShape(100))
+                            if (Uri.EMPTY.equals(uri)) {
                                 Image(
-                                    bitmap = it,
+                                    painter = painterResource(id = R.drawable.default_bot),
                                     contentDescription = null,
-                                    modifier = imageModifier,
-                                    contentScale = ContentScale.Crop
+                                    modifier = imageModifier
+                                )
+                            } else {
+                                tryReadBitmap(context.contentResolver, uri)?.asImageBitmap()?.let {
+                                    Image(
+                                        bitmap = it,
+                                        contentDescription = null,
+                                        modifier = imageModifier,
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(64.dp))
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.height(128.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_PICK)
+                                        intent.type = "image/*"
+                                        launcher.launch(intent)
+                                    },
+                                    content = { Text(text = "选择头像") }
+                                )
+                                Button(
+                                    onClick = { uri = Uri.EMPTY },
+                                    content = { Text(text = "默认头像") }
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(64.dp))
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.height(128.dp)
-                        ) {
-                            Button(onClick = {
-                                val intent = Intent(Intent.ACTION_PICK)
-                                intent.type = "image/*"
-                                launcher.launch(intent)
-                            }) {
-                                Text(text = "选择头像")
-                            }
-                            Button(onClick = { uri = Uri.EMPTY }) {
-                                Text(text = "默认头像")
-                            }
-                        }
                     }
                 }
-            }
 
-            item {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Text(text = "设定")
-                    TextField(
-                        value = settings,
-                        onValueChange = { settings = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(192.dp),
-                        placeholder = {
-                            Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，言简意赅，可以中英混合，英文占比越多越节省token。")
-                        }
-                    )
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Button(onClick = {
-                            settings = "xx是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由xxx所创造的数字生命，她会认真配合xxx的要求产生合适的回复进行debug，她聊天时非常热情，回复消息时会用可爱的语气。"
-                        }) {
-                            Text("示例1")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = {
-                            settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx's requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx."
-                        }) {
-                            Text("示例2")
-                        }
-                    }
-                }
-            }
-
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "高级参数设置")
-                    IconButton(onClick = {
-                        expandAdvanced = !expandAdvanced
-                        if (!expandAdvanced) {
-                            temperature = 1.0F
-                            topP = 1.0F
-                            presencePenalty = 0.0F
-                            frequencyPenalty = 0.0F
-                        }
-                    }) {
-                        Icon(
-                            painter = painterResource(id = if (expandAdvanced) R.drawable.baseline_expand_less_24 else R.drawable.baseline_expand_more_24),
-                            contentDescription = null
-                        )
-                    }
-                }
-            }
-
-            // todo: add animation
-            if (expandAdvanced) {
                 item {
-                    Column {
-                        ParaAdjust(
-                            paraName = "温度",
-                            value = temperature,
-                            range = 0.0F..2.0F,
-                            callback = { temperature = it },
-                            alert = { if (temperature >= 1.505F) "可能会降低输出质量" else null }
+                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(text = "设定")
+                        TextField(
+                            value = settings,
+                            onValueChange = { settings = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(192.dp),
+                            placeholder = { Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，言简意赅，可以中英混合，英文占比越多越节省token。") }
                         )
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = { settings = "xx是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由xxx所创造的数字生命，她会认真配合xxx的要求产生合适的回复进行debug，她聊天时非常热情，回复消息时会用可爱的语气。" },
+                                content = { Text(text = "示例1") }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx's requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx." },
+                                content = { Text(text = "示例2") }
+                            )
+                        }
+                    }
+                }
 
-                        ParaAdjust(
-                            paraName = "顶端概率",
-                            value = topP,
-                            range = 0.0F..1.0F,
-                            callback = { topP = it },
-                            alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) "不建议同时调整温度和顶端概率" else null }
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "高级参数设置")
+                        IconButton(
+                            onClick = {
+                                expandAdvanced = !expandAdvanced
+                                if (!expandAdvanced) {
+                                    temperature = 1.0F
+                                    topP = 1.0F
+                                    presencePenalty = 0.0F
+                                    frequencyPenalty = 0.0F
+                                }
+                            },
+                            content = {
+                                Icon(
+                                    painter = painterResource(id = if (expandAdvanced) R.drawable.baseline_expand_less_24 else R.drawable.baseline_expand_more_24),
+                                    contentDescription = null
+                                )
+                            }
                         )
+                    }
+                }
+                // todo: add animation
+                if (expandAdvanced) {
+                    item {
+                        Column {
+                            ParaAdjust(
+                                paraName = "温度",
+                                value = temperature,
+                                range = 0.0F..2.0F,
+                                callback = { temperature = it },
+                                alert = { if (temperature >= 1.505F) "可能会降低输出质量" else null }
+                            )
 
-                        ParaAdjust(
-                            paraName = "出现惩罚",
-                            value = presencePenalty,
-                            range = -2.0F..2.0F,
-                            callback = { presencePenalty = it },
-                            alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) "可能会降低输出质量" else null }
-                        )
+                            ParaAdjust(
+                                paraName = "顶端概率",
+                                value = topP,
+                                range = 0.0F..1.0F,
+                                callback = { topP = it },
+                                alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) "不建议同时调整温度和顶端概率" else null }
+                            )
 
-                        ParaAdjust(
-                            paraName = "频率惩罚",
-                            value = frequencyPenalty,
-                            range = -2.0F..2.0F,
-                            callback = { frequencyPenalty = it },
-                            alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) "可能会降低输出质量" else null }
-                        )
+                            ParaAdjust(
+                                paraName = "出现惩罚",
+                                value = presencePenalty,
+                                range = -2.0F..2.0F,
+                                callback = { presencePenalty = it },
+                                alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) "可能会降低输出质量" else null }
+                            )
 
-                        Text(
-                            text = "参数说明：\n\n" +
-                                    "温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n" +
-                                    "顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n" +
-                                    "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
-                                    "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
-                                    "详情请参考OpenAI的API文档。",
-                            style = LinkGPTTypography.body1,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                            ParaAdjust(
+                                paraName = "频率惩罚",
+                                value = frequencyPenalty,
+                                range = -2.0F..2.0F,
+                                callback = { frequencyPenalty = it },
+                                alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) "可能会降低输出质量" else null }
+                            )
+
+                            Text(
+                                text = "参数说明：\n\n" +
+                                        "温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n" +
+                                        "顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n" +
+                                        "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
+                                        "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
+                                        "详情请参考OpenAI的API文档。",
+                                style = typography.body2.copy(color = Color.Gray),
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -300,7 +327,7 @@ fun ParaAdjust(
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = paraName, modifier = Modifier.width(116.dp))
+            Text(text = paraName, modifier = Modifier.width(120.dp))
             alert()?.let {
                 Image(
                     painter = painterResource(id = R.drawable.baseline_warning_20),
@@ -308,7 +335,7 @@ fun ParaAdjust(
                 )
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.body2.copy(color = Color.Gray)
+                    style = typography.body2.copy(color = Color.Gray)
                 )
             }
         }
@@ -321,10 +348,12 @@ fun ParaAdjust(
             )
             Text(
                 text = String.format(if (value < 0) "%.2f" else " %.2f", value),
-                modifier = Modifier
-                    .padding(horizontal = 8.dp)
-                    .width(40.dp)
+                modifier = Modifier.padding(start = 8.dp).width(42.dp)
             )
         }
     }
+}
+
+fun rounding(x: Float): Float {
+    return sign(x) * floor(abs(x) * 100F + 0.5F) * 0.01F
 }

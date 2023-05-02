@@ -3,10 +3,27 @@ package com.zxx.linkgpt.ui
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme.colors
+import androidx.compose.material.MaterialTheme.typography
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,8 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.data.models.BotBriefData
-import com.zxx.linkgpt.ui.theme.LinkGPTTypography
-import com.zxx.linkgpt.ui.theme.RoundShapes
+import com.zxx.linkgpt.ui.theme.StatusGreen
+import com.zxx.linkgpt.ui.theme.StatusRed
+import com.zxx.linkgpt.ui.theme.StatusYellow
+import com.zxx.linkgpt.ui.theme.Typography
 import com.zxx.linkgpt.ui.util.TimeDisplayUtil
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import com.zxx.linkgpt.viewmodel.ServerFeedback
@@ -45,110 +64,116 @@ fun ListBot(
     val maxUsage by vm.maxUsage.collectAsState()
     val context = LocalContext.current
 
-    Column {
-        TopAppBar(
-            navigationIcon = {
-                Spacer(modifier = Modifier.width(14.dp))
-                val imageModifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundShapes.small)
-                    .clickable { onClickConfig() }
-                var bytes = ByteArray(0)
-                try {
-                    bytes = context.openFileInput("user.png").readBytes()
-                } catch (_: FileNotFoundException) {}
-                if (bytes.isNotEmpty()) {
-                    Image(
-                        bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap(),
-                        contentDescription = null,
-                        modifier = imageModifier,
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.default_user),
-                        contentDescription = null,
-                        modifier = imageModifier,
-                    )
-                }
-            },
-            actions = {
-                if (serverFeedback == ServerFeedback.REFRESHING) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .size(24.dp)
-                    )
-                } else {
-                    IconButton(onClick = { vm.refreshServerFeedback() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_refresh_24),
-                            contentDescription = null
+    Scaffold (
+        topBar = {
+            TopAppBar(
+                contentColor = Color.White,
+                backgroundColor = colors.primaryVariant,
+                navigationIcon = {
+                    Spacer(modifier = Modifier.width(14.dp))
+                    val imageModifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(100))
+                        .clickable { onClickConfig() }
+                    var bytes = ByteArray(0)
+                    try {
+                        bytes = context.openFileInput("user.png").readBytes()
+                    } catch (_: FileNotFoundException) {}
+                    if (bytes.isNotEmpty()) {
+                        Image(
+                            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap(),
+                            contentDescription = null,
+                            modifier = imageModifier,
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.default_user),
+                            contentDescription = null,
+                            modifier = imageModifier,
                         )
                     }
-                }
+                },
+                actions = {
+                    if (serverFeedback == ServerFeedback.REFRESHING) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.padding(12.dp).size(24.dp)
+                        )
+                    } else {
+                        IconButton(
+                            onClick = { vm.refreshServerFeedback() },
+                            content = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_refresh_24),
+                                    contentDescription = null,
+                                    tint = Color.White
+                                )
+                            }
+                        )
+                    }
 
-                IconButton(onClick = {
-                    onClickAdd()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_add_24),
-                        contentDescription = null,
-                    )
-                }
-            },
-            title = {
-                Column {
-                    Text(
-                        text = if ("" == name) "请点击头像以设置基本信息" else name,
-                        style = LinkGPTTypography.h5.copy(color = Color.White)
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (serverFeedback != ServerFeedback.REFRESHING) {
+                    IconButton(
+                        onClick = onClickAdd,
+                        content = {
                             Icon(
-                                painter = painterResource(id = R.drawable.baseline_circle_12),
+                                painter = painterResource(id = R.drawable.baseline_add_24),
                                 contentDescription = null,
-                                tint = when (serverFeedback) {
-                                    ServerFeedback.OK -> Color(0, 255, 128)
-                                    ServerFeedback.REACH_LIMIT -> Color(255, 192, 0)
-                                    else -> Color(255, 64, 96)
-                                }
+                                tint = Color.White
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
                         }
+                    )
+                },
+                title = {
+                    Column {
                         Text(
-                            text = when (serverFeedback) {
-                                ServerFeedback.REFRESHING -> "正在从服务器拉取状态..."
-                                ServerFeedback.FAILED -> "无法连接至服务器"
-                                ServerFeedback.UNAUTHORIZED -> "未授权的用户"
-                                else -> String.format("今日使用情况：%d/%d", todayUsage, maxUsage)
-                            },
-                            style = LinkGPTTypography.body2.copy(
-                                color = Color.White,
-                                fontSize = 10.sp
-                            )
+                            text = if ("" == name) "请点击头像以设置基本信息" else name,
+                            style = Typography.h5
                         )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (serverFeedback != ServerFeedback.REFRESHING) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_circle_12),
+                                    contentDescription = null,
+                                    tint = when (serverFeedback) {
+                                        ServerFeedback.OK -> StatusGreen
+                                        ServerFeedback.REACH_LIMIT -> StatusYellow
+                                        else -> StatusRed
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                            }
+                            Text(
+                                text = when (serverFeedback) {
+                                    ServerFeedback.REFRESHING -> "正在从服务器拉取状态..."
+                                    ServerFeedback.FAILED -> "无法连接至服务器"
+                                    ServerFeedback.UNAUTHORIZED -> "未授权的用户"
+                                    else -> String.format("今日使用情况：%d/%d", todayUsage, maxUsage)
+                                },
+                                style = typography.body2.copy(fontSize = 10.sp)
+                            )
+                        }
                     }
                 }
-            }
-        )
-
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(items = botList) { briefData ->
-                BotCard(
-                    briefData = briefData,
-                    chatWith = chatWith,
-                    callback = {
-                        vm.refreshDetail(briefData.name)
-                        vm.refreshHistory(briefData.name)
-                        onClickChat()
-                    }
-                )
+            )
+        },
+        content = { paddingValues ->
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                items(items = botList) { briefData ->
+                    BotCard(
+                        briefData = briefData,
+                        chatWith = chatWith,
+                        callback = {
+                            vm.refreshDetail(briefData.name)
+                            vm.refreshHistory(briefData.name)
+                            onClickChat()
+                        }
+                    )
+                }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -161,7 +186,7 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
     ) {
         val imageModifier = Modifier
             .size(56.dp)
-            .clip(RoundShapes.small)
+            .clip(RoundedCornerShape(100))
         var bytes: ByteArray? = null
         try {
             bytes = context.openFileInput(briefData.name + ".png").readBytes()
@@ -186,19 +211,21 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
                 Text(
                     text = briefData.name,
                     modifier = Modifier.weight(1.0F),
-                    style = LinkGPTTypography.h5,
+                    style = Typography.h5,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1
                 )
                 Text(
                     text = TimeDisplayUtil.formatTime(briefData.time),
-                    style = LinkGPTTypography.body2,
+                    style = Typography.body2.copy(fontSize = 12.sp, color = Color.Gray),
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
             }
             Text(
-                text = if (briefData.output != null) briefData.output!! else if (briefData.name == chatWith) "回复中..." else "发生了错误，请重试。",
-                style = LinkGPTTypography.body1,
+                text = if (briefData.output != null) briefData.output!!
+                       else if (briefData.name == chatWith) "回复中..."
+                       else "发生了错误，请重试。",
+                style = Typography.body2.copy(color = Color.Gray),
                 modifier = Modifier.padding(vertical = 2.dp)
             )
         }
