@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,7 +128,7 @@ fun ListBot(
                 title = {
                     Column {
                         Text(
-                            text = if ("" == name) "请点击头像以设置基本信息" else name,
+                            text = if ("" == name) stringResource(id = R.string.startup_tips) else name,
                             style = Typography.h5
                         )
 
@@ -146,10 +147,10 @@ fun ListBot(
                             }
                             Text(
                                 text = when (serverFeedback) {
-                                    ServerFeedback.REFRESHING -> "正在从服务器拉取状态..."
-                                    ServerFeedback.FAILED -> "无法连接至服务器"
-                                    ServerFeedback.UNAUTHORIZED -> "未授权的用户"
-                                    else -> String.format("今日使用情况：%d/%d", todayUsage, maxUsage)
+                                    ServerFeedback.REFRESHING -> stringResource(id = R.string.connecting_server)
+                                    ServerFeedback.FAILED -> stringResource(id = R.string.connection_failed)
+                                    ServerFeedback.UNAUTHORIZED -> stringResource(id = R.string.unauthorized)
+                                    else -> String.format(stringResource(id = R.string.usage_detail), todayUsage, maxUsage)
                                 },
                                 style = typography.body2.copy(fontSize = 10.sp)
                             )
@@ -223,8 +224,8 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
             }
             Text(
                 text = if (briefData.output != null) briefData.output!!
-                       else if (briefData.name == chatWith) "回复中..."
-                       else "发生了错误，请重试。",
+                       else if (briefData.name == chatWith) stringResource(id = R.string.replying)
+                       else stringResource(id = R.string.reply_error),
                 style = Typography.body2.copy(color = Color.Gray),
                 modifier = Modifier.padding(vertical = 2.dp)
             )

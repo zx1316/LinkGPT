@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.util.ShowErrorDialog
@@ -57,6 +58,7 @@ fun AddBot(
     vm: LinkGPTViewModel,
     onClickBack: () -> Unit
 ) {
+    val context = LocalContext.current
     var name by rememberSaveable { mutableStateOf("") }
     var settings by rememberSaveable { mutableStateOf("") }
     var temperature by rememberSaveable { mutableStateOf(1.0F) }
@@ -68,13 +70,17 @@ fun AddBot(
     var uri by rememberSaveable { mutableStateOf(Uri.EMPTY) }
     var errorDetail by rememberSaveable { mutableStateOf("") }
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        if (it.resultCode == Activity.RESULT_OK) {
-            uri = it.data?.data as Uri
-        }
-    }
-    val context = LocalContext.current
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = { if (it.resultCode == Activity.RESULT_OK) uri = it.data?.data as Uri }
+    )
+    val example1 = stringResource(id =  R.string.settings_example1)
+    val example2 = stringResource(id =  R.string.settings_example2)
+    val nameEmpty = stringResource(id = R.string.bot_name_empty)
+    val nameUser = stringResource(id = R.string.bot_name_user)
+    val nameAlready = stringResource(id = R.string.bot_name_already)
+    val mayDecrease = stringResource(id = R.string.may_decrease_quality)
+    val notRecommend = stringResource(id = R.string.change_both_not_recommended)
+
     if (showError) {
         ShowErrorDialog(detail = errorDetail, callback = { showError = false })
     }
@@ -84,7 +90,7 @@ fun AddBot(
             TopAppBar(
                 backgroundColor = colors.primaryVariant,
                 contentColor = Color.White,
-                title = { Text(text = "创建机器人") },
+                title = { Text(text = stringResource(id = R.string.add_bot)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onClickBack,
@@ -100,22 +106,20 @@ fun AddBot(
                     IconButton(
                         onClick = {
                             if ("" == name) {
-                                errorDetail = "名称不能为空！"
+                                errorDetail = nameEmpty
                                 showError = true
                             } else if ("user" == name) {
-                                errorDetail = "名称不能为\"user\"！"
+                                errorDetail = nameUser
                                 showError = true
                             } else {
-                                var flag = true
                                 for (bot in vm.botList.value) {
                                     if (bot.name == name) {
-                                        flag = false
-                                        errorDetail = "已经有叫“$name”的机器人了！"
+                                        errorDetail = String.format(nameAlready, name)
                                         showError = true
                                         break
                                     }
                                 }
-                                if (flag) {
+                                if (!showError) {
                                     val bitmap = tryReadBitmap(context.contentResolver, uri)
                                     if (bitmap != null) {
                                         val byteArrayOutputStream = ByteArrayOutputStream()
@@ -157,7 +161,7 @@ fun AddBot(
             ) {
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "名称")
+                        Text(text = stringResource(id = R.string.bot_name))
                         TextField(
                             value = name,
                             onValueChange = { name = it },
@@ -169,7 +173,7 @@ fun AddBot(
 
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "头像")
+                        Text(text = stringResource(id = R.string.avatar))
                         Row {
                             val imageModifier = Modifier
                                 .size(128.dp)
@@ -201,11 +205,11 @@ fun AddBot(
                                         intent.type = "image/*"
                                         launcher.launch(intent)
                                     },
-                                    content = { Text(text = "选择头像") }
+                                    content = { Text(text = stringResource(id = R.string.choose_avatar)) }
                                 )
                                 Button(
                                     onClick = { uri = Uri.EMPTY },
-                                    content = { Text(text = "默认头像") }
+                                    content = { Text(text = stringResource(id = R.string.default_avatar)) }
                                 )
                             }
                         }
@@ -214,24 +218,24 @@ fun AddBot(
 
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "设定")
+                        Text(text = stringResource(id = R.string.settings))
                         TextField(
                             value = settings,
                             onValueChange = { settings = it },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(192.dp),
-                            placeholder = { Text(text = "如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，言简意赅，可以中英混合，英文占比越多越节省token。") }
+                            placeholder = { Text(text = stringResource(id = R.string.settings_placeholder)) }
                         )
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Button(
-                                onClick = { settings = "xx是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由xxx所创造的数字生命，她会认真配合xxx的要求产生合适的回复进行debug，她聊天时非常热情，回复消息时会用可爱的语气。" },
-                                content = { Text(text = "示例1") }
+                                onClick = { settings = example1 },
+                                content = { Text(text = stringResource(id = R.string.settings_example_button1)) }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
-                                onClick = { settings = "xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx's requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx." },
-                                content = { Text(text = "示例2") }
+                                onClick = { settings = example2 },
+                                content = { Text(text = stringResource(id = R.string.settings_example_button2)) }
                             )
                         }
                     }
@@ -243,7 +247,7 @@ fun AddBot(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(text = "高级参数设置")
+                        Text(text = stringResource(id = R.string.advanced_parameters))
                         IconButton(
                             onClick = {
                                 expandAdvanced = !expandAdvanced
@@ -268,44 +272,39 @@ fun AddBot(
                     item {
                         Column {
                             ParaAdjust(
-                                paraName = "温度",
+                                paraName = stringResource(id = R.string.temperature),
                                 value = temperature,
                                 range = 0.0F..2.0F,
                                 callback = { temperature = it },
-                                alert = { if (temperature >= 1.505F) "可能会降低输出质量" else null }
+                                alert = { if (temperature >= 1.505F) mayDecrease else null }
                             )
 
                             ParaAdjust(
-                                paraName = "顶端概率",
+                                paraName = stringResource(id = R.string.top_p),
                                 value = topP,
                                 range = 0.0F..1.0F,
                                 callback = { topP = it },
-                                alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) "不建议同时调整温度和顶端概率" else null }
+                                alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) notRecommend else null }
                             )
 
                             ParaAdjust(
-                                paraName = "出现惩罚",
+                                paraName = stringResource(id = R.string.presence_penalty),
                                 value = presencePenalty,
                                 range = -2.0F..2.0F,
                                 callback = { presencePenalty = it },
-                                alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) "可能会降低输出质量" else null }
+                                alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) mayDecrease else null }
                             )
 
                             ParaAdjust(
-                                paraName = "频率惩罚",
+                                paraName = stringResource(id = R.string.frequency_penalty),
                                 value = frequencyPenalty,
                                 range = -2.0F..2.0F,
                                 callback = { frequencyPenalty = it },
-                                alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) "可能会降低输出质量" else null }
+                                alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) mayDecrease else null }
                             )
 
                             Text(
-                                text = "参数说明：\n\n" +
-                                        "温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n" +
-                                        "顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n" +
-                                        "出现惩罚：根据新tokens是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n" +
-                                        "频率惩罚：根据新tokens在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n" +
-                                        "详情请参考OpenAI的API文档。",
+                                text = stringResource(id = R.string.para_info),
                                 style = typography.body2.copy(color = Color.Gray),
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
@@ -348,7 +347,9 @@ fun ParaAdjust(
             )
             Text(
                 text = String.format(if (value < 0) "%.2f" else " %.2f", value),
-                modifier = Modifier.padding(start = 8.dp).width(42.dp)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .width(42.dp)
             )
         }
     }

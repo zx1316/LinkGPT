@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.util.ShowAlertDialog
@@ -67,12 +68,13 @@ fun UserConfig(
     var errorDetail by rememberSaveable { mutableStateOf("") }
     var showChangeAlert by rememberSaveable { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { activityResult ->
-        if (activityResult.resultCode == Activity.RESULT_OK) {
-            uri = activityResult.data?.data as Uri
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = {
+            if (it.resultCode == Activity.RESULT_OK) {
+                uri = it.data?.data as Uri
+            }
         }
-    }
+    )
     val saveConfig: () -> Unit = {
         if (Uri.EMPTY.equals(uri)) {
             context.deleteFile("user.png")
@@ -90,12 +92,15 @@ fun UserConfig(
         vm.updateUserConfig(name, host, port.toInt())
         onClickBack()
     }
+    val nameEmpty = stringResource(id = R.string.user_name_empty)
+    val hostEmpty = stringResource(id = R.string.host_empty)
+    val portIncorrect = stringResource(id = R.string.port_incorrect)
 
     if (showError) {
         ShowErrorDialog(detail = errorDetail, callback = { showError = false })
     } else if (showChangeAlert) {
         ShowAlertDialog(
-            detail = "检测到您正在更改用户名，这可能导致先前对话中提及您用户名的聊天特化型机器人的新回复出现混乱。确定要更改吗？",
+            detail = stringResource(id = R.string.change_user_name_alert),
             cancelCallback = { showChangeAlert = false },
             confirmCallback = saveConfig
         )
@@ -106,7 +111,7 @@ fun UserConfig(
             TopAppBar(
                 backgroundColor = colors.primaryVariant,
                 contentColor = Color.White,
-                title = { Text(text = "设置") },
+                title = { Text(text = stringResource(id = R.string.user_config)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onClickBack,
@@ -123,13 +128,13 @@ fun UserConfig(
                         onClick = {
                             val portInt = port.toIntOrNull()
                             if ("" == name) {
-                                errorDetail = "用户名不能为空！"
+                                errorDetail = nameEmpty
                                 showError = true
                             } else if ("" == host) {
-                                errorDetail = "主机不能为空！"
+                                errorDetail = hostEmpty
                                 showError = true
                             } else if (portInt == null || portInt < 1 || portInt > 65535) {
-                                errorDetail = "请输入正确的端口！"
+                                errorDetail = portIncorrect
                                 showError = true
                             } else if (name != vm.user.value && vm.user.value != "") {
                                 showChangeAlert = true
@@ -150,11 +155,14 @@ fun UserConfig(
         },
         content = { paddingValues ->
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().padding(paddingValues).padding(horizontal = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
             ) {
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "用户名")
+                        Text(text = stringResource(id = R.string.user_name))
                         TextField(
                             value = name,
                             onValueChange = { name = it },
@@ -166,7 +174,7 @@ fun UserConfig(
 
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "头像")
+                        Text(text = stringResource(id = R.string.avatar))
                         Row {
                             val imageModifier = Modifier
                                 .size(128.dp)
@@ -199,11 +207,11 @@ fun UserConfig(
                                         intent.type = "image/*"
                                         launcher.launch(intent)
                                     },
-                                    content = { Text(text = "选择头像") }
+                                    content = { Text(text = stringResource(id = R.string.choose_avatar)) }
                                 )
                                 Button(
                                     onClick = { uri = Uri.EMPTY },
-                                    content = { Text(text = "默认头像") }
+                                    content = { Text(text = stringResource(id = R.string.default_avatar)) }
                                 )
                             }
                         }
@@ -212,7 +220,7 @@ fun UserConfig(
 
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "主机")
+                        Text(text = stringResource(id = R.string.host))
                         TextField(
                             value = host,
                             onValueChange = { host = it },
@@ -224,7 +232,7 @@ fun UserConfig(
 
                 item {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = "端口")
+                        Text(text = stringResource(id = R.string.port))
                         TextField(
                             value = port,
                             onValueChange = { port = it },
