@@ -3,10 +3,6 @@ package com.zxx.linkgpt
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -29,12 +25,7 @@ class MainActivity : ComponentActivity() {
             LinkGPTTheme {
                 val navController = rememberNavController()
                 val vm: LinkGPTViewModel = viewModel()
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background,
-                    content = { LinkGPTNavHost(navController = navController, vm = vm) }
-                )
+                LinkGPTNavHost(navController = navController, vm = vm)
             }
         }
     }
