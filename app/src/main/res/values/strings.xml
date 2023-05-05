@@ -11,11 +11,11 @@
     <string name="default_avatar">默认头像</string>
     <string name="settings_placeholder">如果想创建最多聊4096tokens的传统机器人，或者只是为了询问问题，请留空。如果想创建能无限对话的聊天特化型机器人，请填入以第三人称视角描述的设定，言简意赅，可以中英混合，英文占比越多越节省token。</string>
     <string name="settings">设定</string>
-    <string name="advanced_parameters">高级参数设置</string>
+    <string name="advanced_settings">高级设置</string>
     <string name="add_bot">创建机器人</string>
     <string name="bot_name_empty">名称不能为空！</string>
     <string name="bot_name_user">名称不能为“user”！</string>
-    <string name="bot_name_already">已经有叫%s的机器人了！</string>
+    <string name="bot_name_already">已经有叫“%s”的机器人了！</string>
     <string name="temperature">温度</string>
     <string name="top_p">顶端概率</string>
     <string name="presence_penalty">出现惩罚</string>
@@ -37,4 +37,14 @@
     <string name="usage_detail">今日使用清况：%d/%d</string>
     <string name="replying">回复中…</string>
     <string name="reply_error">发生了错误，请重试。</string>
+    <string name="bot_config">机器人设置</string>
+    <string name="send">发送</string>
+    <string name="token_format">当前/累计：%d/%d</string>
+    <string name="discard_change_alert">放弃未保存的更改？</string>
+    <string name="reset_alert">清空记忆相当于重置机器人，但清空记忆后聊天记录依然保留。确定要清空记忆吗？</string>
+    <string name="delete_alert">数据抹杀将会清除该机器人的所有信息（包括聊天记录），且不可恢复。确定要执行数据抹杀吗？</string>
+    <string name="reset_para">重置参数</string>
+    <string name="reset">清空记忆</string>
+    <string name="delete">数据抹杀</string>
+    <string name="max_length">最多12个中文字符或24个英文字符</string>
 </resources>

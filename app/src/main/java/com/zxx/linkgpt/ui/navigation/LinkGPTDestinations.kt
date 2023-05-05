@@ -16,11 +16,10 @@ object UserConfig: LinkGPTDestination {
     override val route = "user_config"
 }
 
+object BotConfig: LinkGPTDestination {
+    override val route = "bot_config"
+}
+
 object Chat: LinkGPTDestination {
     override val route: String = "chat"
-//    const val botArg = "bot"
-//    val routeWithArgs = "$route/{$botArg}"
-//    val arguments = listOf(
-//        navArgument(botArg) { type = NavType.StringType }
-//    )
 }

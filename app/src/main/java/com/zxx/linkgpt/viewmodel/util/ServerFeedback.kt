@@ -1,4 +1,4 @@
-package com.zxx.linkgpt.viewmodel
+package com.zxx.linkgpt.viewmodel.util
 
 enum class ServerFeedback {
     REFRESHING,

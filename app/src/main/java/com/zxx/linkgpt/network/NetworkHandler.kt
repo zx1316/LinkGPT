@@ -5,18 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.zxx.linkgpt.data.models.BotDetailData
 import com.zxx.linkgpt.data.models.BotHistoryData
 import com.zxx.linkgpt.network.models.ReplyData
-import com.zxx.linkgpt.network.models.SubmitData
 import com.zxx.linkgpt.network.models.UserDetailData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.Headers
-import okhttp3.HttpUrl
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import java.util.Calendar
+import java.util.Date
+import java.util.Random
 import java.util.concurrent.TimeUnit
-import java.util.zip.Deflater
 
 class NetworkHandler {
     companion object {
@@ -55,6 +55,7 @@ class NetworkHandler {
         withContext(Dispatchers.IO) {
             // Delete '=' at the end of the base64 string because the server can still parse it.
             // But why the output of fucking Android Base64.encodeToString has '\n'???
+            /*
             val encoded = Base64.encodeToString(user.toByteArray(), Base64.URL_SAFE)
                 .replace("=", "")
                 .replace("\n", "")
@@ -64,6 +65,13 @@ class NetworkHandler {
                 .build()
             val request = Request.Builder().url(url).headers(headers).get().build()
             return@withContext processWebpage(request, UserDetailData::class.java)
+            */
+            delay(1000)
+            return@withContext UserDetailData(
+                authorized = true,
+                todayUsage = 233,
+                maxUsage = 23333
+            )
         }
 
     /**
@@ -79,6 +87,7 @@ class NetworkHandler {
      */
     suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, detail: BotDetailData): ReplyData? =
         withContext(Dispatchers.IO) {
+            /*
             val submitData = SubmitData(
                 userName = user,
                 bot = detail.name,
@@ -105,6 +114,33 @@ class NetworkHandler {
                 .build()
             val request = Request.Builder().url(url).headers(headers).post(requestBody).build()
             return@withContext processWebpage(request, ReplyData::class.java)
+            */
+            delay(2000)
+            val calendar = Calendar.getInstance()
+            calendar.time = Date(0)
+            val random = Random()
+            if (random.nextBoolean()) {
+                return@withContext ReplyData(
+                    status = "OK",
+                    message = ("测试test".repeat(6) + "\n\n").repeat(2) + "12345678".repeat(6),
+                    newSummary = "",
+                    startTime = calendar,
+                    summaryCutoff = calendar,
+                    lastUsage = 233,
+                    todayUsage = 1000,
+                    maxUsage = 10000
+                )
+            }
+            return@withContext ReplyData(
+                status = "???????",
+                message = "",
+                newSummary = "",
+                startTime = calendar,
+                summaryCutoff = calendar,
+                lastUsage = 0,
+                todayUsage = 1000,
+                maxUsage = 10000
+            )
         }
 
     private fun <T> processWebpage(request: Request, clazz: Class<T>): T? {

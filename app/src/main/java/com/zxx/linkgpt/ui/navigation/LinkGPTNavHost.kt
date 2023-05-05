@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.zxx.linkgpt.ui.AddBot
+import com.zxx.linkgpt.ui.AddOrConfigBot
 import com.zxx.linkgpt.ui.Chat
 import com.zxx.linkgpt.ui.ListBot
 import com.zxx.linkgpt.ui.UserConfig
@@ -26,9 +26,26 @@ fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
         }
 
         composable(route = AddBot.route) {
-            AddBot(
+            AddOrConfigBot(
                 vm = vm,
-                onClickBack = { navController.popBackStack() }
+                onClickBack = { navController.popBackStack() },
+                onClickDelete = {
+                    navController.popBackStack()
+                    navController.popBackStack()
+                },
+                isConfig = false
+            )
+        }
+
+        composable(route = BotConfig.route) {
+            AddOrConfigBot(
+                vm = vm,
+                onClickBack = { navController.popBackStack() },
+                onClickDelete = {
+                    navController.popBackStack()
+                    navController.popBackStack()
+                },
+                isConfig = true
             )
         }
 
@@ -39,18 +56,11 @@ fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
             )
         }
 
-//        composable(route = Chat.routeWithArgs, arguments = Chat.arguments) { navBackStackEntry ->
-//            val accountType = navBackStackEntry.arguments?.getString(Chat.botArg)
-//            accountType?.let {
-//                Chat(vm = vm, bot = it)
-//            }
-//        }
-
         composable(route = Chat.route) {
             Chat(
                 vm = vm,
                 onClickBack = { navController.popBackStack() },
-                onClickConfig = {}    // todo: complete botConfig view
+                onClickConfig = { navController.navigate(BotConfig.route) }
             )
         }
     }

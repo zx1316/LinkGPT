@@ -19,22 +19,6 @@ class LinkGPTRepository(private val LinkGPTDao: LinkGPTDao) {
         LinkGPTDao.newBot(botDetailData)
     }
 
-//    suspend fun adjustBot(
-//        name: String,
-//        temperature: Float,
-//        topP: Float,
-//        presencePenalty: Float,
-//        frequencyPenalty: Float,
-//    ) {
-//        LinkGPTDao.adjustBot(
-//            name,
-//            temperature,
-//            topP,
-//            presencePenalty,
-//            frequencyPenalty,
-//        )
-//    }
-
     suspend fun getBotList(): List<BotBriefData> {
         return LinkGPTDao.getBotList()
     }

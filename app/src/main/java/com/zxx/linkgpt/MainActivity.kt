@@ -1,6 +1,7 @@
 package com.zxx.linkgpt
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         // A hack way to fix the navigation empty screen bug in Xiaomi phones.
         // https://stackoverflow.com/questions/71363125/compose-navhost-start-the-white-screen
         lifecycleScope.launch {

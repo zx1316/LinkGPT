@@ -1,7 +1,5 @@
 package com.zxx.linkgpt.ui
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -29,10 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,9 +39,10 @@ import com.zxx.linkgpt.ui.theme.StatusGreen
 import com.zxx.linkgpt.ui.theme.StatusRed
 import com.zxx.linkgpt.ui.theme.StatusYellow
 import com.zxx.linkgpt.ui.theme.Typography
+import com.zxx.linkgpt.ui.util.Avatar
 import com.zxx.linkgpt.ui.util.TimeDisplayUtil
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
-import com.zxx.linkgpt.viewmodel.ServerFeedback
+import com.zxx.linkgpt.viewmodel.util.ServerFeedback
 import java.io.FileNotFoundException
 
 @Composable
@@ -72,34 +67,24 @@ fun ListBot(
                 backgroundColor = colors.primaryVariant,
                 navigationIcon = {
                     Spacer(modifier = Modifier.width(14.dp))
-                    val imageModifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(100))
-                        .clickable { onClickConfig() }
-                    var bytes = ByteArray(0)
+                    var bytes: ByteArray? = null
                     try {
                         bytes = context.openFileInput("user.png").readBytes()
                     } catch (_: FileNotFoundException) {}
-                    if (bytes.isNotEmpty()) {
-                        Image(
-                            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap(),
-                            contentDescription = null,
-                            modifier = imageModifier,
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.default_user),
-                            contentDescription = null,
-                            modifier = imageModifier,
-                        )
-                    }
+                    Avatar(
+                        bytes = bytes,
+                        defaultPainter = painterResource(id = R.drawable.default_user),
+                        size = 40.dp,
+                        clickCallback = onClickConfig
+                    )
                 },
                 actions = {
                     if (serverFeedback == ServerFeedback.REFRESHING) {
                         CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.padding(12.dp).size(24.dp)
+                            color = colors.secondary,
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .size(24.dp)
                         )
                     } else {
                         IconButton(
@@ -108,19 +93,18 @@ fun ListBot(
                                 Icon(
                                     painter = painterResource(id = R.drawable.baseline_refresh_24),
                                     contentDescription = null,
-                                    tint = Color.White
+                                    tint = colors.secondary
                                 )
                             }
                         )
                     }
-
                     IconButton(
                         onClick = onClickAdd,
                         content = {
                             Icon(
                                 painter = painterResource(id = R.drawable.baseline_add_24),
                                 contentDescription = null,
-                                tint = Color.White
+                                tint = colors.secondary
                             )
                         }
                     )
@@ -129,9 +113,10 @@ fun ListBot(
                     Column {
                         Text(
                             text = if ("" == name) stringResource(id = R.string.startup_tips) else name,
-                            style = Typography.h5
+                            style = Typography.h5,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1
                         )
-
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (serverFeedback != ServerFeedback.REFRESHING) {
                                 Icon(
@@ -159,15 +144,17 @@ fun ListBot(
                 }
             )
         },
-        content = { paddingValues ->
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        content = {
+            LazyColumn(modifier = Modifier
+                .fillMaxSize()
+                .padding(it)) {
                 items(items = botList) { briefData ->
                     BotCard(
                         briefData = briefData,
                         chatWith = chatWith,
                         callback = {
                             vm.refreshDetail(briefData.name)
-                            vm.refreshHistory(briefData.name)
+                            vm.refreshDisplayedHistory(briefData.name)
                             onClickChat()
                         }
                     )
@@ -185,27 +172,11 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
         .clickable { callback() }
         .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
-        val imageModifier = Modifier
-            .size(56.dp)
-            .clip(RoundedCornerShape(100))
         var bytes: ByteArray? = null
         try {
             bytes = context.openFileInput(briefData.name + ".png").readBytes()
         } catch (_: FileNotFoundException) {}
-        if (bytes != null) {
-            Image(
-                bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap(),
-                contentDescription = null,
-                modifier = imageModifier,
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.default_bot),
-                contentDescription = null,
-                modifier = imageModifier
-            )
-        }
+        Avatar(bytes = bytes, defaultPainter = painterResource(id = R.drawable.default_bot), size = 56.dp)
         Spacer(modifier = Modifier.width(12.dp))
         Column(verticalArrangement = Arrangement.Center, modifier = Modifier.height(56.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
@@ -227,7 +198,9 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
                        else if (briefData.name == chatWith) stringResource(id = R.string.replying)
                        else stringResource(id = R.string.reply_error),
                 style = Typography.body2.copy(color = Color.Gray),
-                modifier = Modifier.padding(vertical = 2.dp)
+                modifier = Modifier.padding(vertical = 2.dp),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
             )
         }
     }
