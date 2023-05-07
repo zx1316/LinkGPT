@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.LinkedList
 
 class LinkGPTViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
@@ -40,7 +39,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     private val _serverFeedback = MutableStateFlow(ServerFeedback.FAILED)
     private val _chattingWith = MutableStateFlow("")
     private val _detail = MutableStateFlow(BotDetailData())
-    private val _displayedHistory = MutableStateFlow(LinkedList<DisplayedHistoryData>())
+    private val _displayedHistory = MutableStateFlow(ArrayList<DisplayedHistoryData>())
 
     val botList = _botList.asStateFlow()
     val user = _user.asStateFlow()
@@ -225,22 +224,22 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             var timeStr = ""
             val historyArr = repository.getHistory(name)
-            val displayedHistoryArr = LinkedList<DisplayedHistoryData>()
+            val displayedHistoryArr = ArrayList<DisplayedHistoryData>()
             for (dat in historyArr) {
                 val newTimeStr = TimeDisplayUtil.formatTime(dat.time)
                 if (newTimeStr != timeStr) {
-                    displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.TIME, newTimeStr))
+                    displayedHistoryArr.add(DisplayedHistoryData(ShowType.TIME, newTimeStr))
                     timeStr = newTimeStr
                 }
                 if (dat.input != null) {
                     if (dat.output == null && "" == _chattingWith.value) {
-                        displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.USER_ERR, dat.input!!))
+                        displayedHistoryArr.add(DisplayedHistoryData(ShowType.USER_ERR, dat.input!!))
                     } else {
-                        displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.USER, dat.input!!))
+                        displayedHistoryArr.add(DisplayedHistoryData(ShowType.USER, dat.input!!))
                     }
                 }
                 if (dat.output != null) {
-                    displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.BOT, dat.output!!))
+                    displayedHistoryArr.add(DisplayedHistoryData(ShowType.BOT, dat.output!!))
                 }
             }
             _displayedHistory.value = displayedHistoryArr

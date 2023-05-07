@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -96,7 +97,7 @@ fun Chat(
     }
 
     LaunchedEffect(displayedHistory) {
-        listState.animateScrollToItem(0)
+        listState.animateScrollToItem(displayedHistory.size)
     }
 
     Scaffold(
@@ -234,7 +235,7 @@ fun Chat(
         },
         content = {
             Surface(modifier = Modifier.padding(it).fillMaxSize()) {
-                LazyColumn(state = listState, reverseLayout = true) {
+                LazyColumn(state = listState) {
                     items(items = displayedHistory) { displayedHistoryData ->
                         when (displayedHistoryData.type) {
                             ShowType.TIME -> Text(
@@ -256,6 +257,7 @@ fun Chat(
                             }
                         }
                     }
+                    item { Spacer(modifier = Modifier.height(0.dp)) }
                 }
             }
         }
