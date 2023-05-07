@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zxx.linkgpt.data.LinkGPTDatabase
@@ -14,14 +13,15 @@ import com.zxx.linkgpt.data.models.BotHistoryData
 import com.zxx.linkgpt.data.repository.LinkGPTRepository
 import com.zxx.linkgpt.network.NetworkHandler
 import com.zxx.linkgpt.ui.util.TimeDisplayUtil
+import com.zxx.linkgpt.ui.util.showToast
 import com.zxx.linkgpt.viewmodel.util.DisplayedHistoryData
 import com.zxx.linkgpt.viewmodel.util.ServerFeedback
 import com.zxx.linkgpt.viewmodel.util.ShowType
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.LinkedList
 
 class LinkGPTViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
@@ -40,8 +40,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     private val _serverFeedback = MutableStateFlow(ServerFeedback.FAILED)
     private val _chattingWith = MutableStateFlow("")
     private val _detail = MutableStateFlow(BotDetailData())
-    private val _displayedHistory = MutableStateFlow(ArrayList<DisplayedHistoryData>())
-    private val _listState = MutableStateFlow(LazyListState(0))
+    private val _displayedHistory = MutableStateFlow(LinkedList<DisplayedHistoryData>())
 
     val botList = _botList.asStateFlow()
     val user = _user.asStateFlow()
@@ -53,7 +52,6 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     val chattingWith = _chattingWith.asStateFlow()
     val detail = _detail.asStateFlow()
     val displayedHistory = _displayedHistory.asStateFlow()
-    val listState = _listState.asStateFlow()
 
     fun addBot(
         name: String,
@@ -104,6 +102,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                 _serverFeedback.value = ServerFeedback.REFRESHING
                 val userDetail = networkHandler.checkUser(_user.value, _host.value, _port.value)
                 if (userDetail == null) {
+                    showToast("发生了错误：" + networkHandler.getReason(), context)
                     _serverFeedback.value = ServerFeedback.FAILED
                 } else if (userDetail.authorized) {
                     if (userDetail.todayUsage > userDetail.maxUsage) {
@@ -120,7 +119,6 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    // I believe there must be a better way to do this.
     fun chat(input: String) {
         viewModelScope.launch {
             // avoid the change of _detail. Shallow copy is ok.
@@ -145,6 +143,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                 detail = detailCopy
             )
             if (reply == null) {
+                showToast("发生了错误：" + networkHandler.getReason(), context)
                 _serverFeedback.value = ServerFeedback.FAILED
             } else if ("unauthorized" == reply.status) {
                 _serverFeedback.value = ServerFeedback.UNAUTHORIZED
@@ -155,7 +154,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     _serverFeedback.value = ServerFeedback.REACH_LIMIT
                 } else {
                     _serverFeedback.value = ServerFeedback.OK
-                    if ("OK" == reply.status) {
+                    if ("ok" == reply.status) {
                         if ("" != reply.newSummary) {
                             detailCopy.summary = reply.newSummary
                         }
@@ -169,6 +168,8 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                             refreshDetail(detailCopy.name)
                         }
                         refreshBotList()
+                    } else {
+                        showToast("发生了错误：" + reply.status, context)
                     }
                 }
             }
@@ -224,27 +225,25 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             var timeStr = ""
             val historyArr = repository.getHistory(name)
-            val displayedHistoryArr = ArrayList<DisplayedHistoryData>()
+            val displayedHistoryArr = LinkedList<DisplayedHistoryData>()
             for (dat in historyArr) {
                 val newTimeStr = TimeDisplayUtil.formatTime(dat.time)
                 if (newTimeStr != timeStr) {
-                    displayedHistoryArr.add(DisplayedHistoryData(ShowType.TIME, newTimeStr))
+                    displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.TIME, newTimeStr))
                     timeStr = newTimeStr
                 }
                 if (dat.input != null) {
                     if (dat.output == null && "" == _chattingWith.value) {
-                        displayedHistoryArr.add(DisplayedHistoryData(ShowType.USER_ERR, dat.input!!))
+                        displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.USER_ERR, dat.input!!))
                     } else {
-                        displayedHistoryArr.add(DisplayedHistoryData(ShowType.USER, dat.input!!))
+                        displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.USER, dat.input!!))
                     }
                 }
                 if (dat.output != null) {
-                    displayedHistoryArr.add(DisplayedHistoryData(ShowType.BOT, dat.output!!))
+                    displayedHistoryArr.addFirst(DisplayedHistoryData(ShowType.BOT, dat.output!!))
                 }
             }
             _displayedHistory.value = displayedHistoryArr
-            delay(100)         // wait for lazy column
-            _listState.value.scrollToItem(_displayedHistory.value.size)
         }
     }
 

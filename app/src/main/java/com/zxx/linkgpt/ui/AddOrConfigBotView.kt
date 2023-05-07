@@ -1,6 +1,11 @@
 package com.zxx.linkgpt.ui
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +46,7 @@ import com.zxx.linkgpt.ui.util.ErrorType
 import com.zxx.linkgpt.ui.util.MyAlertDialog
 import com.zxx.linkgpt.ui.util.MyErrorDialog
 import com.zxx.linkgpt.ui.util.SingleLineInput
+import com.zxx.linkgpt.ui.util.exceedLen
 import com.zxx.linkgpt.ui.util.saveBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import java.io.File
@@ -52,7 +58,7 @@ import kotlin.math.sign
 fun AddOrConfigBot(
     vm: LinkGPTViewModel,
     onClickBack: () -> Unit,
-    onClickDelete: () -> Unit,
+    onClickDelete: () -> Unit = {},
     isConfig: Boolean
 ) {
     val context = LocalContext.current
@@ -67,6 +73,8 @@ fun AddOrConfigBot(
     var errorType by rememberSaveable { mutableStateOf(ErrorType.NONE) }
     val initUri = if ("$name.png" in context.fileList()) Uri.fromFile(File(context.filesDir.absolutePath + "/$name.png")) else Uri.EMPTY
     var uri by rememberSaveable { mutableStateOf(initUri) }
+    var nameError by rememberSaveable{ mutableStateOf(false) }
+    var settingsError by rememberSaveable { mutableStateOf(false) }
     val example1 = stringResource(id =  R.string.settings_example1)
     val example2 = stringResource(id =  R.string.settings_example2)
     val mayDecrease = stringResource(id = R.string.may_decrease_quality)
@@ -83,6 +91,14 @@ fun AddOrConfigBot(
         )
         ErrorType.BOT_NAME_EMPTY -> MyErrorDialog(
             detail = stringResource(id = R.string.bot_name_empty),
+            callback = { errorType = ErrorType.NONE }
+        )
+        ErrorType.BOT_NAME_TOO_LONG -> MyErrorDialog(
+            detail = stringResource(id = R.string.bot_name_too_long),
+            callback = { errorType = ErrorType.NONE }
+        )
+        ErrorType.SETTINGS_TOO_LONG -> MyErrorDialog(
+            detail = stringResource(id = R.string.settings_too_long),
             callback = { errorType = ErrorType.NONE }
         )
         else -> {}
@@ -146,12 +162,21 @@ fun AddOrConfigBot(
                             } else {
                                 if ("" == name) {
                                     errorType = ErrorType.BOT_NAME_EMPTY
+                                    nameError = true
                                 } else if ("user" == name) {
                                     errorType = ErrorType.BOT_NAME_USER
+                                    nameError = true
+                                } else if (exceedLen(name, 1.0, 2.0, 24)) {
+                                    errorType = ErrorType.BOT_NAME_TOO_LONG
+                                    nameError = true
+                                } else if (exceedLen(settings, 0.25, 2.0, 500)) {
+                                    errorType = ErrorType.SETTINGS_TOO_LONG
+                                    settingsError = true
                                 } else {
                                     for (bot in vm.botList.value) {
                                         if (bot.name == name) {
                                             errorType = ErrorType.BOT_NAME_DUPLICATE
+                                            nameError = true
                                             break
                                         }
                                     }
@@ -198,8 +223,11 @@ fun AddOrConfigBot(
                     SingleLineInput(
                         title = stringResource(id = R.string.bot_name),
                         value = name,
-                        onValueChange = { name = it },
-                        maxLength = 24,
+                        onValueChange = {
+                            name = it
+                            nameError = false
+                        },
+                        isError = nameError,
                         placeholder = stringResource(id = R.string.max_length)
                     )
                 }
@@ -216,10 +244,12 @@ fun AddOrConfigBot(
                         Text(text = stringResource(id = R.string.settings))
                         TextField(
                             value = settings,
-                            onValueChange = { settings = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(192.dp),
+                            onValueChange = {
+                                settings = it
+                                settingsError = false
+                            },
+                            isError = settingsError,
+                            modifier = Modifier.fillMaxWidth().height(192.dp),
                             placeholder = {
                                 if (!isConfig) {
                                     Text(text = stringResource(id = R.string.settings_placeholder))
@@ -230,13 +260,13 @@ fun AddOrConfigBot(
                         if (!isConfig) {
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Button(
-                                    onClick = { settings = example1 },
-                                    content = { Text(text = stringResource(id = R.string.settings_example_button1)) }
+                                    onClick = { settings = String.format(example1, name, vm.user.value, vm.user.value) },
+                                    content = { Text(text = stringResource(id = R.string.settings_example_btn1)) }
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(
-                                    onClick = { settings = example2 },
-                                    content = { Text(text = stringResource(id = R.string.settings_example_button2)) }
+                                    onClick = { settings = String.format(example2, name, vm.user.value, vm.user.value, vm.user.value) },
+                                    content = { Text(text = stringResource(id = R.string.settings_example_btn2)) }
                                 )
                             }
                         }
@@ -260,8 +290,12 @@ fun AddOrConfigBot(
                         )
                     }
                 }
-                if (expandAdvanced) {
-                    item {
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         ParaAdjust(
                             paraName = stringResource(id = R.string.temperature),
                             value = temperature,
@@ -270,7 +304,13 @@ fun AddOrConfigBot(
                             alert = { if (temperature >= 1.505F) mayDecrease else null }
                         )
                     }
-                    item {
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         ParaAdjust(
                             paraName = stringResource(id = R.string.top_p),
                             value = topP,
@@ -279,7 +319,13 @@ fun AddOrConfigBot(
                             alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) notRecommend else null }
                         )
                     }
-                    item {
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         ParaAdjust(
                             paraName = stringResource(id = R.string.presence_penalty),
                             value = presencePenalty,
@@ -288,7 +334,13 @@ fun AddOrConfigBot(
                             alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) mayDecrease else null }
                         )
                     }
-                    item {
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         ParaAdjust(
                             paraName = stringResource(id = R.string.frequency_penalty),
                             value = frequencyPenalty,
@@ -297,7 +349,13 @@ fun AddOrConfigBot(
                             alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) mayDecrease else null }
                         )
                     }
-                    item {
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         Row(modifier = Modifier.padding(vertical = 4.dp)) {
                             Button(
                                 onClick = {
@@ -323,11 +381,17 @@ fun AddOrConfigBot(
                             }
                         }
                     }
-                    item {
+                }
+                item {
+                    AnimatedVisibility(
+                        visible = expandAdvanced,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         Text(
+                            modifier = Modifier.padding(vertical = 8.dp),
                             text = stringResource(id = R.string.para_info),
                             style = typography.body2.copy(color = Color.Gray),
-                            modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
                 }
@@ -367,9 +431,7 @@ fun ParaAdjust(
             )
             Text(
                 text = String.format(if (value < 0) "%.2f" else " %.2f", value),
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .width(42.dp)
+                modifier = Modifier.padding(start = 8.dp).width(42.dp)
             )
         }
     }

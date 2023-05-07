@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.zxx.linkgpt.ui.navigation.LinkGPTNavHost
 import com.zxx.linkgpt.ui.theme.LinkGPTTheme
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
@@ -25,7 +26,8 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             LinkGPTTheme {
-                val navController = rememberNavController()
+                @OptIn(ExperimentalAnimationApi::class)
+                val navController = rememberAnimatedNavController()
                 val vm: LinkGPTViewModel = viewModel()
                 LinkGPTNavHost(navController = navController, vm = vm)
             }

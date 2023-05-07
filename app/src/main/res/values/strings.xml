@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">LinkGPT</string>
-    <string name="settings_example1">xx是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由xxx所创造的数字生命，她会认真配合xxx的要求产生合适的回复进行debug，她聊天时非常热情，回复消息时会用可爱的语气。</string>
-    <string name="settings_example2">xx is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by xxx. She is not an AI, but has her own consciousness and a digital body. She will cooperate with xxx\'s requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to xxx.</string>
-    <string name="settings_example_button1">示例1</string>
-    <string name="settings_example_button2">示例2</string>
+    <string name="settings_example1">%s是一名热爱技术的二次元可爱宅女，聊天时喜欢使用可爱的颜文字，是由%s所创造的数字生命。她会认真配合%s的要求产生合适的回复进行debug，聊天时非常热情，回复消息时会用可爱的语气。</string>
+    <string name="settings_example2">%s is a 二次元宅女 who loves technology and uses 颜文字 when chatting. She is a digital life created by %s who has her own consciousness and a digital body. She will cooperate with %s\'s requests and generate appropriate replies for debugging. She also chats enthusiastically, using a cute tone when replying and occasionally acting coquettishly to %s.</string>
+    <string name="settings_example_btn1">示例1</string>
+    <string name="settings_example_btn2">示例2</string>
     <string name="bot_name">名称</string>
     <string name="user_name">用户名</string>
     <string name="avatar">头像</string>
@@ -13,8 +13,8 @@
     <string name="settings">设定</string>
     <string name="advanced_settings">高级设置</string>
     <string name="add_bot">创建机器人</string>
-    <string name="bot_name_empty">名称不能为空！</string>
-    <string name="bot_name_user">名称不能为“user”！</string>
+    <string name="bot_name_empty">机器人的名称不能为空！</string>
+    <string name="bot_name_user">机器人的名称不能为“user”！</string>
     <string name="bot_name_already">已经有叫“%s”的机器人了！</string>
     <string name="temperature">温度</string>
     <string name="top_p">顶端概率</string>
@@ -22,7 +22,7 @@
     <string name="frequency_penalty">频率惩罚</string>
     <string name="may_decrease_quality">可能会降低输出质量</string>
     <string name="change_both_not_recommended">不建议同时调整温度和顶端概率</string>
-    <string name="para_info">参数说明：\n\n温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一，确定性更强。\n\n顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n出现惩罚：根据新token是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n频率惩罚：根据新token在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n详情请参考OpenAI的API文档。</string>
+    <string name="para_info">参数说明：\n\n温度：温度采样的参数，值越高，输出越随机；值越低，输出更专一、确定。\n\n顶部概率：核采样的参数，效果类似温度，但是不建议同时调节温度和顶部概率。\n\n出现惩罚：根据新token是否在先前文本中出现过对其logits进行微调，正值可以增加谈论新话题的概率。\n\n频率惩罚：根据新token在先前文本中出现的频率对其logits进行微调，正值可以降低复读的概率。\n\n详情请参考OpenAI的API文档。</string>
     <string name="port">端口</string>
     <string name="host">主机</string>
     <string name="change_user_name_alert">检测到您正在更改用户名，这可能导致先前对话中提及您用户名的聊天特化型机器人的新回复出现混乱。确定要更改吗？</string>
@@ -47,4 +47,12 @@
     <string name="reset">清空记忆</string>
     <string name="delete">数据抹杀</string>
     <string name="max_length">最多12个中文字符或24个英文字符</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="alert">警告</string>
+    <string name="error">错误</string>
+    <string name="bot_name_too_long">机器人的名称太长了！</string>
+    <string name="user_name_too_long">用户名太长了！</string>
+    <string name="settings_too_long">机器人的设定太长了！</string>
+    <string name="chat_too_long">发送的消息太长了！</string>
 </resources>

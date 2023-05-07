@@ -52,10 +52,10 @@ fun MyErrorDialog(detail: String, callback: () -> Unit) {
         confirmButton = {
             TextButton(
                 onClick = callback,
-                content = { Text("确定") }
+                content = { Text(text = stringResource(id = R.string.confirm)) }
             )
         },
-        title = { Text(text = "错误") },
+        title = { Text(text = stringResource(id = R.string.error)) },
         text = { Text(text = detail) }
     )
 }
@@ -72,16 +72,16 @@ fun MyAlertDialog(
         confirmButton = {
             TextButton(
                 onClick = confirmCallback,
-                content = { Text(text = "确定", color = confirmColor) }
+                content = { Text(text = stringResource(id = R.string.confirm), color = confirmColor) }
             )
         },
         dismissButton = {
             TextButton(
                 onClick = cancelCallback,
-                content = { Text(text = "取消") }
+                content = { Text(text = stringResource(id = R.string.cancel)) }
             )
         },
-        title = { Text(text = "警告") },
+        title = { Text(text = stringResource(id = R.string.alert)) },
         text = { Text(text = detail) }
     )
 }
@@ -93,7 +93,6 @@ fun SingleLineInput(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "",
-    maxLength: Int = Int.MAX_VALUE,
     readOnly: Boolean = false,
     isError: Boolean = false
 ) {
@@ -101,22 +100,7 @@ fun SingleLineInput(
         Text(text = title)
         TextField(
             value = value,
-            onValueChange = {
-                var len = 0
-                var upper: Int = it.length
-                for (i in it.indices) {
-                    if (it[i] >= 128.toChar()) {
-                        len += 2
-                    } else {
-                        len++
-                    }
-                    if (len > maxLength) {
-                        upper = i
-                        break
-                    }
-                }
-                onValueChange(it.substring(0, upper))
-            },
+            onValueChange = onValueChange,
             maxLines = 1,
             singleLine = true,
             modifier = modifier.fillMaxWidth(),
@@ -196,6 +180,14 @@ fun Avatar(bytes: ByteArray?, defaultPainter: Painter, size: Dp, clickCallback: 
             modifier = imageModifier
         )
     }
+}
+
+fun exceedLen(str: String, asciiLen: Double, nonAsciiLen: Double, limit: Int): Boolean {
+    var cnt = 0.0
+    for (ch in str) {
+        cnt += if (ch < 128.toChar()) asciiLen else nonAsciiLen
+    }
+    return cnt > limit
 }
 
 fun saveBitmap(context: Context, uri: Uri, filename: String) {

@@ -1,9 +1,12 @@
 package com.zxx.linkgpt.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
 import com.zxx.linkgpt.ui.AddOrConfigBot
 import com.zxx.linkgpt.ui.Chat
 import com.zxx.linkgpt.ui.ListBot
@@ -12,11 +15,29 @@ import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 
 @Composable
 fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
-    NavHost(
-        navController = navController,
-        startDestination = ListBot.route
-    ) {
-        composable(route = ListBot.route) {
+    val left = AnimatedContentTransitionScope.SlideDirection.Left
+    val right = AnimatedContentTransitionScope.SlideDirection.Right
+    val duration = 400
+
+    @OptIn(ExperimentalAnimationApi::class)
+    AnimatedNavHost(navController = navController, startDestination = ListBot.route) {
+        composable(
+            route = ListBot.route,
+            exitTransition = {
+                if (targetState.destination.route == UserConfig.route) {
+                    slideOutOfContainer(towards = right, animationSpec = tween(duration))
+                } else {
+                    slideOutOfContainer(towards = left, animationSpec = tween(duration))
+                }
+            },
+            popEnterTransition = {
+                if (initialState.destination.route == UserConfig.route) {
+                    slideIntoContainer(towards = left, animationSpec = tween(duration))
+                } else {
+                    slideIntoContainer(towards = right, animationSpec = tween(duration))
+                }
+            }
+        ) {
             ListBot(
                 vm = vm,
                 onClickAdd = { navController.navigate(AddBot.route) },
@@ -25,19 +46,23 @@ fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
             )
         }
 
-        composable(route = AddBot.route) {
+        composable(
+            route = AddBot.route,
+            enterTransition = { slideIntoContainer(towards = left, animationSpec = tween(duration)) },
+            exitTransition = { slideOutOfContainer(towards = right, animationSpec = tween(duration)) }
+        ) {
             AddOrConfigBot(
                 vm = vm,
                 onClickBack = { navController.popBackStack() },
-                onClickDelete = {
-                    navController.popBackStack()
-                    navController.popBackStack()
-                },
                 isConfig = false
             )
         }
 
-        composable(route = BotConfig.route) {
+        composable(
+            route = BotConfig.route,
+            enterTransition = { slideIntoContainer(towards = left, animationSpec = tween(duration)) },
+            exitTransition = { slideOutOfContainer(towards = right, animationSpec = tween(duration)) }
+        ) {
             AddOrConfigBot(
                 vm = vm,
                 onClickBack = { navController.popBackStack() },
@@ -49,14 +74,24 @@ fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
             )
         }
 
-        composable(route = UserConfig.route) {
+        composable(
+            route = UserConfig.route,
+            enterTransition = { slideIntoContainer(towards = right, animationSpec = tween(duration)) },
+            exitTransition = { slideOutOfContainer(towards = left, animationSpec = tween(duration)) }
+        ) {
             UserConfig(
                 vm = vm,
                 onClickBack = { navController.popBackStack() }
             )
         }
 
-        composable(route = Chat.route) {
+        composable(
+            route = Chat.route,
+            enterTransition = { slideIntoContainer(towards = left, animationSpec = tween(duration)) },
+            popEnterTransition = { slideIntoContainer(towards = right, animationSpec = tween(duration)) },
+            exitTransition = { slideOutOfContainer(towards = left, animationSpec = tween(duration)) },
+            popExitTransition = { slideOutOfContainer(towards = right, animationSpec = tween(duration)) }
+        ) {
             Chat(
                 vm = vm,
                 onClickBack = { navController.popBackStack() },

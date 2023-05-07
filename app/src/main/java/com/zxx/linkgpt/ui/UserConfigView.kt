@@ -28,6 +28,7 @@ import com.zxx.linkgpt.ui.util.ErrorType
 import com.zxx.linkgpt.ui.util.MyAlertDialog
 import com.zxx.linkgpt.ui.util.MyErrorDialog
 import com.zxx.linkgpt.ui.util.SingleLineInput
+import com.zxx.linkgpt.ui.util.exceedLen
 import com.zxx.linkgpt.ui.util.saveBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import java.io.File
@@ -45,6 +46,7 @@ fun UserConfig(
     var uri by rememberSaveable { mutableStateOf(initUri) }
     var errorType by rememberSaveable { mutableStateOf(ErrorType.NONE) }
     var alertType by rememberSaveable { mutableStateOf(AlertType.NONE) }
+    var nameError by rememberSaveable { mutableStateOf(false) }
     val saveConfig: () -> Unit = {
         if (Uri.EMPTY.equals(uri)) {
             context.deleteFile("user.png")
@@ -58,6 +60,10 @@ fun UserConfig(
     when (errorType) {
         ErrorType.USER_NAME_EMPTY -> MyErrorDialog(
             detail = stringResource(id = R.string.user_name_empty),
+            callback = { errorType = ErrorType.NONE }
+        )
+        ErrorType.USER_NAME_TOO_LONG -> MyErrorDialog(
+            detail = stringResource(id = R.string.user_name_too_long),
             callback = { errorType = ErrorType.NONE }
         )
         ErrorType.HOST_EMPTY -> MyErrorDialog(
@@ -115,7 +121,12 @@ fun UserConfig(
                             val portInt = port.toIntOrNull()
                             if ("" == name) {
                                 errorType = ErrorType.USER_NAME_EMPTY
-                            } else if ("" == host) {
+                                nameError = true
+                            } else if (exceedLen(name, 1.0, 2.0, 24)) {
+                                errorType = ErrorType.USER_NAME_TOO_LONG
+                                nameError = true
+                            }
+                            else if ("" == host) {
                                 errorType = ErrorType.HOST_EMPTY
                             } else if (portInt == null || portInt < 1 || portInt > 65535) {
                                 errorType = ErrorType.PORT_INCORRECT
@@ -147,9 +158,12 @@ fun UserConfig(
                     SingleLineInput(
                         title = stringResource(id = R.string.user_name),
                         value = name,
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                            nameError = false
+                        },
                         placeholder = stringResource(id = R.string.max_length),
-                        maxLength = 24
+                        isError = nameError
                     )
                 }
                 item {

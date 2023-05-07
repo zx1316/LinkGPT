@@ -22,7 +22,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.data.models.BotBriefData
 import com.zxx.linkgpt.ui.theme.StatusGreen
@@ -52,12 +51,12 @@ fun ListBot(
     onClickConfig: () -> Unit,
     onClickChat: () -> Unit
 ) {
-    val botList by vm.botList.collectAsState()
-    val chatWith by vm.chattingWith.collectAsState()
-    val name by vm.user.collectAsState()
-    val serverFeedback by vm.serverFeedback.collectAsState()
-    val todayUsage by vm.todayUsage.collectAsState()
-    val maxUsage by vm.maxUsage.collectAsState()
+    val botList by vm.botList.collectAsStateWithLifecycle()
+    val chatWith by vm.chattingWith.collectAsStateWithLifecycle()
+    val name by vm.user.collectAsStateWithLifecycle()
+    val serverFeedback by vm.serverFeedback.collectAsStateWithLifecycle()
+    val todayUsage by vm.todayUsage.collectAsStateWithLifecycle()
+    val maxUsage by vm.maxUsage.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Scaffold (
@@ -82,9 +81,7 @@ fun ListBot(
                     if (serverFeedback == ServerFeedback.REFRESHING) {
                         CircularProgressIndicator(
                             color = colors.secondary,
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .size(24.dp)
+                            modifier = Modifier.padding(12.dp).size(24.dp)
                         )
                     } else {
                         IconButton(
@@ -137,7 +134,7 @@ fun ListBot(
                                     ServerFeedback.UNAUTHORIZED -> stringResource(id = R.string.unauthorized)
                                     else -> String.format(stringResource(id = R.string.usage_detail), todayUsage, maxUsage)
                                 },
-                                style = typography.body2.copy(fontSize = 10.sp)
+                                style = typography.overline
                             )
                         }
                     }
@@ -189,7 +186,7 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
                 )
                 Text(
                     text = TimeDisplayUtil.formatTime(briefData.time),
-                    style = Typography.body2.copy(fontSize = 12.sp, color = Color.Gray),
+                    style = Typography.caption.copy(color = Color.Gray),
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
             }
