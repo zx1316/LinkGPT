@@ -11,6 +11,8 @@ data class SubmitData(
     var bot: String,
     @JsonProperty("settings")
     var settings: String,
+    @JsonProperty("use_template")
+    var useTemplate: Boolean,
     @JsonProperty("history")
     var history: ArrayList<BotHistoryData> = ArrayList(),
     @JsonProperty("summary")

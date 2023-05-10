@@ -58,7 +58,8 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
         temperature: Float,
         topP: Float,
         presencePenalty: Float,
-        frequencyPenalty: Float
+        frequencyPenalty: Float,
+        useTemplate: Boolean
     ) {
         viewModelScope.launch {
             repository.newBot(
@@ -69,6 +70,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                     topP = topP,
                     presencePenalty = presencePenalty,
                     frequencyPenalty = frequencyPenalty,
+                    useTemplate = useTemplate
                 )
             )
             repository.insertHistory(
@@ -94,26 +96,22 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun refreshServerFeedback() {
-        if ("" == _host.value) {
-            _serverFeedback.value = ServerFeedback.FAILED
-        } else {
-            viewModelScope.launch {
-                _serverFeedback.value = ServerFeedback.REFRESHING
-                val userDetail = networkHandler.checkUser(_user.value, _host.value, _port.value)
-                if (userDetail == null) {
-                    showToast("发生了错误：" + networkHandler.getReason(), context)
-                    _serverFeedback.value = ServerFeedback.FAILED
-                } else if (userDetail.authorized) {
-                    if (userDetail.todayUsage > userDetail.maxUsage) {
-                        _serverFeedback.value = ServerFeedback.REACH_LIMIT
-                    } else {
-                        _serverFeedback.value = ServerFeedback.OK
-                    }
-                    _todayUsage.value = userDetail.todayUsage
-                    _maxUsage.value = userDetail.maxUsage
+        viewModelScope.launch {
+            _serverFeedback.value = ServerFeedback.REFRESHING
+            val userDetail = networkHandler.checkUser(_user.value, _host.value, _port.value)
+            if (userDetail == null) {
+                showToast("发生了错误：" + networkHandler.getReason(), context)
+                _serverFeedback.value = ServerFeedback.FAILED
+            } else if (userDetail.authorized) {
+                if (userDetail.todayUsage > userDetail.maxUsage) {
+                    _serverFeedback.value = ServerFeedback.REACH_LIMIT
                 } else {
-                    _serverFeedback.value = ServerFeedback.UNAUTHORIZED
+                    _serverFeedback.value = ServerFeedback.OK
                 }
+                _todayUsage.value = userDetail.todayUsage
+                _maxUsage.value = userDetail.maxUsage
+            } else {
+                _serverFeedback.value = ServerFeedback.UNAUTHORIZED
             }
         }
     }

@@ -2,9 +2,12 @@ package com.zxx.linkgpt.ui
 
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +27,8 @@ import androidx.compose.material.MaterialTheme.colors
 import androidx.compose.material.MaterialTheme.typography
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Slider
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
@@ -64,6 +69,7 @@ fun AddOrConfigBot(
     val context = LocalContext.current
     var name by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.name else "") }
     var settings by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.settings else "" ) }
+    var useTemplate by rememberSaveable { mutableStateOf(false) }
     var temperature by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.temperature else 1.0F) }
     var topP by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.topP else 1.0F) }
     var presencePenalty by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.presencePenalty else 0.0F) }
@@ -75,14 +81,10 @@ fun AddOrConfigBot(
     var uri by rememberSaveable { mutableStateOf(initUri) }
     var nameError by rememberSaveable{ mutableStateOf(false) }
     var settingsError by rememberSaveable { mutableStateOf(false) }
-    val example1 = stringResource(id =  R.string.settings_example1)
-    val example2 = stringResource(id =  R.string.settings_example2)
-    val mayDecrease = stringResource(id = R.string.may_decrease_quality)
-    val notRecommend = stringResource(id = R.string.change_both_not_recommended)
 
     when (errorType) {
         ErrorType.BOT_NAME_DUPLICATE -> MyErrorDialog(
-            detail = stringResource(id = R.string.bot_name_already),
+            detail = context.getString(R.string.bot_name_already, name),
             callback = { errorType = ErrorType.NONE }
         )
         ErrorType.BOT_NAME_USER -> MyErrorDialog(
@@ -98,7 +100,7 @@ fun AddOrConfigBot(
             callback = { errorType = ErrorType.NONE }
         )
         ErrorType.SETTINGS_TOO_LONG -> MyErrorDialog(
-            detail = stringResource(id = R.string.settings_too_long),
+            detail = stringResource(id = if (useTemplate) R.string.settings_too_long else R.string.system_too_long),
             callback = { errorType = ErrorType.NONE }
         )
         else -> {}
@@ -169,7 +171,7 @@ fun AddOrConfigBot(
                                 } else if (exceedLen(name, 1.0, 2.0, 24)) {
                                     errorType = ErrorType.BOT_NAME_TOO_LONG
                                     nameError = true
-                                } else if (exceedLen(settings, 0.25, 2.0, 500)) {
+                                } else if (exceedLen(settings, 0.25, 2.0, if (useTemplate) 500 else 1000)) {
                                     errorType = ErrorType.SETTINGS_TOO_LONG
                                     settingsError = true
                                 } else {
@@ -187,7 +189,8 @@ fun AddOrConfigBot(
                                             temperature = rounding(temperature),
                                             topP = rounding(topP),
                                             presencePenalty = rounding(presencePenalty),
-                                            frequencyPenalty = rounding(frequencyPenalty)
+                                            frequencyPenalty = rounding(frequencyPenalty),
+                                            useTemplate = useTemplate
                                         )
                                     }
                                 }
@@ -228,7 +231,8 @@ fun AddOrConfigBot(
                             nameError = false
                         },
                         isError = nameError,
-                        placeholder = stringResource(id = R.string.max_length)
+                        placeholder = stringResource(id = R.string.max_length),
+                        readOnly = isConfig
                     )
                 }
                 item {
@@ -240,32 +244,63 @@ fun AddOrConfigBot(
                     )
                 }
                 item {
-                    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        Text(text = stringResource(id = R.string.settings))
-                        TextField(
-                            value = settings,
-                            onValueChange = {
-                                settings = it
-                                settingsError = false
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = stringResource(id = R.string.use_template))
+                        Switch(
+                            checked = useTemplate,
+                            onCheckedChange = {
+                                useTemplate = it
+                                settings = ""
                             },
-                            isError = settingsError,
-                            modifier = Modifier.fillMaxWidth().height(192.dp),
-                            placeholder = {
-                                if (!isConfig) {
-                                    Text(text = stringResource(id = R.string.settings_placeholder))
-                                }
-                            },
-                            readOnly = isConfig
+                            colors = SwitchDefaults.colors(checkedThumbColor = colors.primary),
+                            enabled = !isConfig
                         )
-                        if (!isConfig) {
-                            Row(modifier = Modifier.fillMaxWidth()) {
+                    }
+                }
+                item {
+                    Crossfade(useTemplate) { flag ->
+                        Column {
+                            Text(text = stringResource(id = if (flag) R.string.settings else R.string.system))
+                            TextField(
+                                value = settings,
+                                onValueChange = {
+                                    settings = it
+                                    settingsError = false
+                                },
+                                isError = settingsError,
+                                modifier = Modifier.fillMaxWidth().height(192.dp),
+                                placeholder = {
+                                    if (!isConfig) {
+                                        Text(text = stringResource(id = if (flag) R.string.settings_placeholder else R.string.system_placeholder))
+                                    }
+                                },
+                                readOnly = isConfig
+                            )
+                        }
+                    }
+                }
+                if (!isConfig) {
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = {
+                                    settings = if (useTemplate) context.getString(R.string.settings_example1, name, vm.user.value)
+                                    else context.getString(R.string.system_example, name, vm.user.value)
+                                },
+                                content = { Text(text = stringResource(id = R.string.settings_example_btn1)) }
+                            )
+                            AnimatedVisibility(
+                                visible = useTemplate,
+                                enter = fadeIn() + expandHorizontally(),
+                                exit = fadeOut() + shrinkHorizontally()
+                            ) {
                                 Button(
-                                    onClick = { settings = String.format(example1, name, vm.user.value, vm.user.value) },
-                                    content = { Text(text = stringResource(id = R.string.settings_example_btn1)) }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Button(
-                                    onClick = { settings = String.format(example2, name, vm.user.value, vm.user.value, vm.user.value) },
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                    onClick = { settings = context.getString(R.string.settings_example2, name, vm.user.value) },
                                     content = { Text(text = stringResource(id = R.string.settings_example_btn2)) }
                                 )
                             }
@@ -301,7 +336,10 @@ fun AddOrConfigBot(
                             value = temperature,
                             range = 0.0F..2.0F,
                             callback = { temperature = it },
-                            alert = { if (temperature >= 1.505F) mayDecrease else null }
+                            alert = {
+                                if (rounding(temperature) > 1.5F) context.getString(R.string.may_decrease_quality)
+                                else null
+                            }
                         )
                     }
                 }
@@ -316,7 +354,10 @@ fun AddOrConfigBot(
                             value = topP,
                             range = 0.0F..1.0F,
                             callback = { topP = it },
-                            alert = { if (abs(temperature - 1.0F) >= 0.005F && 1.0F - topP >= 0.005F) notRecommend else null }
+                            alert = {
+                                if (rounding(temperature) != 1.0F && rounding(topP) != 1.0F) context.getString(R.string.change_both_not_recommended)
+                                else null
+                            }
                         )
                     }
                 }
@@ -331,7 +372,10 @@ fun AddOrConfigBot(
                             value = presencePenalty,
                             range = -2.0F..2.0F,
                             callback = { presencePenalty = it },
-                            alert = { if (presencePenalty >= 1.005F || presencePenalty <= -0.005F) mayDecrease else null }
+                            alert = {
+                                if (rounding(presencePenalty) > 1.0F || rounding(presencePenalty) < 0.0F) context.getString(R.string.may_decrease_quality)
+                                else null
+                            }
                         )
                     }
                 }
@@ -346,7 +390,10 @@ fun AddOrConfigBot(
                             value = frequencyPenalty,
                             range = -2.0F..2.0F,
                             callback = { frequencyPenalty = it },
-                            alert = { if (frequencyPenalty >= 1.005F || frequencyPenalty <= -0.005F) mayDecrease else null }
+                            alert = {
+                                if (rounding(frequencyPenalty) > 1.0F || rounding(frequencyPenalty) < 0.0F) context.getString(R.string.may_decrease_quality)
+                                else null
+                            }
                         )
                     }
                 }
