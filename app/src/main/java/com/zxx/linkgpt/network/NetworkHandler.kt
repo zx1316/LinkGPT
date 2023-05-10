@@ -70,6 +70,10 @@ class NetworkHandler {
             val encoded = Base64.encodeToString(user.toByteArray(), Base64.URL_SAFE)
                 .replace("=", "")
                 .replace("\n", "")
+            if ("" == host) {
+                reason = "connection_failed"
+                return@withContext null
+            }
             val url = HttpUrl.Builder().scheme("http").host(host).port(port)
                 .addPathSegment("index.html")
                 .addQueryParameter("dat", encoded)
@@ -96,6 +100,7 @@ class NetworkHandler {
                 bot = detail.name,
                 summary = detail.summary,
                 settings = detail.settings,
+                useTemplate = detail.useTemplate,
                 history = history as ArrayList<BotHistoryData>,
                 temperature = detail.temperature,
                 topP = detail.topP,
@@ -103,6 +108,10 @@ class NetworkHandler {
                 frequencyPenalty = detail.frequencyPenalty,
                 summaryCutoff = detail.summaryCutoff
             )
+            if ("" == host) {
+                reason = "connection_failed"
+                return@withContext null
+            }
             val url = HttpUrl.Builder().scheme("http").host(host).port(port).addPathSegment("index.html").build()
             // To simplify, we don't use a ByteArrayOutputStream.
             val deflater = Deflater(6, true)
