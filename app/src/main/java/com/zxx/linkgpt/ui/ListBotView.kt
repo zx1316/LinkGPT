@@ -132,7 +132,7 @@ fun ListBot(
                                     ServerFeedback.REFRESHING -> stringResource(id = R.string.connecting_server)
                                     ServerFeedback.FAILED -> stringResource(id = R.string.connection_failed)
                                     ServerFeedback.UNAUTHORIZED -> stringResource(id = R.string.unauthorized)
-                                    else -> String.format(stringResource(id = R.string.usage_detail), todayUsage, maxUsage)
+                                    else -> context.getString(R.string.overall_usage_detail, todayUsage, maxUsage)
                                 },
                                 style = typography.overline
                             )

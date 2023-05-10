@@ -141,7 +141,7 @@ fun Chat(
                             )
                             Text(
                                 text = if (chattingWith == detail.name) stringResource(id = R.string.replying)
-                                       else String.format(stringResource(id = R.string.token_format), detail.lastUsage, detail.totalUsage),
+                                       else context.getString(R.string.bot_usage_detail, detail.lastUsage, detail.totalUsage),
                                 style = typography.overline
                             )
                         }
