@@ -47,6 +47,8 @@ fun UserConfig(
     var errorType by rememberSaveable { mutableStateOf(ErrorType.NONE) }
     var alertType by rememberSaveable { mutableStateOf(AlertType.NONE) }
     var nameError by rememberSaveable { mutableStateOf(false) }
+    var portError by rememberSaveable { mutableStateOf(false) }
+    var hostError by rememberSaveable { mutableStateOf(false) }
     val saveConfig: () -> Unit = {
         if (Uri.EMPTY.equals(uri)) {
             context.deleteFile("user.png")
@@ -83,7 +85,8 @@ fun UserConfig(
             cancelCallback = { alertType = AlertType.NONE },
             confirmCallback = saveConfig
         )
-    } else if (alertType == AlertType.DISCARD) {
+    }
+    else if (alertType == AlertType.DISCARD) {
         MyAlertDialog(
             detail = stringResource(id = R.string.discard_change_alert),
             cancelCallback = { alertType = AlertType.NONE },
@@ -125,11 +128,12 @@ fun UserConfig(
                             } else if (exceedLen(name, 1.0, 2.0, 24)) {
                                 errorType = ErrorType.USER_NAME_TOO_LONG
                                 nameError = true
-                            }
-                            else if ("" == host) {
+                            } else if ("" == host) {
                                 errorType = ErrorType.HOST_EMPTY
+                                hostError = true
                             } else if (portInt == null || portInt < 1 || portInt > 65535) {
                                 errorType = ErrorType.PORT_INCORRECT
+                                portError = true
                             } else if (name != vm.user.value && vm.user.value != "") {
                                 alertType = AlertType.CHANGE_USER_NAME
                             } else {
@@ -178,14 +182,22 @@ fun UserConfig(
                     SingleLineInput(
                         title = stringResource(id = R.string.host),
                         value = host,
-                        onValueChange = { host = it },
+                        onValueChange = {
+                            host = it
+                            hostError = false
+                        },
+                        isError = hostError
                     )
                 }
                 item {
                     SingleLineInput(
                         title = stringResource(id = R.string.port),
                         value = port,
-                        onValueChange = { port = it },
+                        onValueChange = {
+                            port = it
+                            portError = false
+                        },
+                        isError = portError
                     )
                 }
             }
