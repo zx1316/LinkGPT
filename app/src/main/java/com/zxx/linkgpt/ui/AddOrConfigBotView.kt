@@ -68,8 +68,8 @@ fun AddOrConfigBot(
 ) {
     val context = LocalContext.current
     var name by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.name else "") }
-    var settings by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.settings else "" ) }
-    var useTemplate by rememberSaveable { mutableStateOf(false) }
+    var setting by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.setting else "" ) }
+    var useTemplate by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.useTemplate else false) }
     var temperature by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.temperature else 1.0F) }
     var topP by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.topP else 1.0F) }
     var presencePenalty by rememberSaveable { mutableStateOf(if (isConfig) vm.detail.value.presencePenalty else 0.0F) }
@@ -80,7 +80,7 @@ fun AddOrConfigBot(
     val initUri = if ("$name.png" in context.fileList()) Uri.fromFile(File(context.filesDir.absolutePath + "/$name.png")) else Uri.EMPTY
     var uri by rememberSaveable { mutableStateOf(initUri) }
     var nameError by rememberSaveable{ mutableStateOf(false) }
-    var settingsError by rememberSaveable { mutableStateOf(false) }
+    var settingError by rememberSaveable { mutableStateOf(false) }
 
     when (errorType) {
         ErrorType.BOT_NAME_DUPLICATE -> MyErrorDialog(
@@ -99,8 +99,8 @@ fun AddOrConfigBot(
             detail = stringResource(id = R.string.bot_name_too_long),
             callback = { errorType = ErrorType.NONE }
         )
-        ErrorType.SETTINGS_TOO_LONG -> MyErrorDialog(
-            detail = stringResource(id = if (useTemplate) R.string.settings_too_long else R.string.system_too_long),
+        ErrorType.SETTING_TOO_LONG -> MyErrorDialog(
+            detail = stringResource(id = if (useTemplate) R.string.setting_too_long else R.string.system_too_long),
             callback = { errorType = ErrorType.NONE }
         )
         else -> {}
@@ -141,7 +141,7 @@ fun AddOrConfigBot(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            if (isConfig && (!initUri.equals(uri) || temperature != vm.detail.value.temperature || topP != vm.detail.value.topP || presencePenalty != vm.detail.value.presencePenalty || frequencyPenalty != vm.detail.value.frequencyPenalty)) {
+                            if (isConfig && (!initUri.equals(uri) || rounding(temperature) != vm.detail.value.temperature || rounding(topP) != vm.detail.value.topP || rounding(presencePenalty) != vm.detail.value.presencePenalty || rounding(frequencyPenalty) != vm.detail.value.frequencyPenalty)) {
                                 alertType = AlertType.DISCARD
                             } else {
                                 onClickBack()
@@ -171,9 +171,9 @@ fun AddOrConfigBot(
                                 } else if (exceedLen(name, 1.0, 2.0, 24)) {
                                     errorType = ErrorType.BOT_NAME_TOO_LONG
                                     nameError = true
-                                } else if (exceedLen(settings, 0.25, 2.0, if (useTemplate) 500 else 1000)) {
-                                    errorType = ErrorType.SETTINGS_TOO_LONG
-                                    settingsError = true
+                                } else if (exceedLen(setting, 0.2, 1.2, if (useTemplate) 500 else 750)) {
+                                    errorType = ErrorType.SETTING_TOO_LONG
+                                    settingError = true
                                 } else {
                                     for (bot in vm.botList.value) {
                                         if (bot.name == name) {
@@ -185,7 +185,7 @@ fun AddOrConfigBot(
                                     if (errorType == ErrorType.NONE) {
                                         vm.addBot(
                                             name = name,
-                                            settings = settings,
+                                            setting = setting,
                                             temperature = rounding(temperature),
                                             topP = rounding(topP),
                                             presencePenalty = rounding(presencePenalty),
@@ -254,7 +254,7 @@ fun AddOrConfigBot(
                             checked = useTemplate,
                             onCheckedChange = {
                                 useTemplate = it
-                                settings = ""
+                                setting = ""
                             },
                             colors = SwitchDefaults.colors(checkedThumbColor = colors.primary),
                             enabled = !isConfig
@@ -266,13 +266,13 @@ fun AddOrConfigBot(
                         Column {
                             Text(text = stringResource(id = if (flag) R.string.settings else R.string.system))
                             TextField(
-                                value = settings,
+                                value = setting,
                                 onValueChange = {
-                                    settings = it
-                                    settingsError = false
+                                    setting = it
+                                    settingError = false
                                 },
-                                isError = settingsError,
-                                modifier = Modifier.fillMaxWidth().height(192.dp),
+                                isError = settingError,
+                                modifier = Modifier.fillMaxWidth().height(208.dp),
                                 placeholder = {
                                     if (!isConfig) {
                                         Text(text = stringResource(id = if (flag) R.string.settings_placeholder else R.string.system_placeholder))
@@ -288,7 +288,7 @@ fun AddOrConfigBot(
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Button(
                                 onClick = {
-                                    settings = if (useTemplate) context.getString(R.string.settings_example1, name, vm.user.value)
+                                    setting = if (useTemplate) context.getString(R.string.settings_example1, name, vm.user.value)
                                     else context.getString(R.string.system_example, name, vm.user.value)
                                 },
                                 content = { Text(text = stringResource(id = R.string.settings_example_btn1)) }
@@ -300,7 +300,7 @@ fun AddOrConfigBot(
                             ) {
                                 Button(
                                     modifier = Modifier.padding(horizontal = 8.dp),
-                                    onClick = { settings = context.getString(R.string.settings_example2, name, vm.user.value) },
+                                    onClick = { setting = context.getString(R.string.settings_example2, name, vm.user.value) },
                                     content = { Text(text = stringResource(id = R.string.settings_example_btn2)) }
                                 )
                             }

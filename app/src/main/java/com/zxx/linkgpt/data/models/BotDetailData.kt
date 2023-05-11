@@ -14,7 +14,7 @@ data class BotDetailData(
     var topP: Float = 1.0F,
     var presencePenalty: Float = 0.0F,
     var frequencyPenalty: Float = 0.0F,
-    var settings: String = "",
+    var setting: String = "",
     var useTemplate: Boolean = false,
     var summary: String = "None",
     var startTime: Calendar = Calendar.getInstance(),

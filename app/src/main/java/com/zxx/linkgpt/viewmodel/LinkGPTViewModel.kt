@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.zxx.linkgpt.R
 import com.zxx.linkgpt.data.LinkGPTDatabase
 import com.zxx.linkgpt.data.models.BotBriefData
 import com.zxx.linkgpt.data.models.BotDetailData
@@ -54,7 +55,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
 
     fun addBot(
         name: String,
-        settings: String,
+        setting: String,
         temperature: Float,
         topP: Float,
         presencePenalty: Float,
@@ -65,7 +66,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
             repository.newBot(
                 BotDetailData(
                     name = name,
-                    settings = settings,
+                    setting = setting,
                     temperature = temperature,
                     topP = topP,
                     presencePenalty = presencePenalty,
@@ -76,7 +77,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
             repository.insertHistory(
                 BotHistoryData(
                     name = name,
-                    output = "机器人已创建，快来聊天吧！"
+                    output = context.getString(R.string.create_message)
                 )
             )
             refreshBotList()
@@ -100,7 +101,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
             _serverFeedback.value = ServerFeedback.REFRESHING
             val userDetail = networkHandler.checkUser(_user.value, _host.value, _port.value)
             if (userDetail == null) {
-                showToast("发生了错误：" + networkHandler.getReason(), context)
+                showToast(context.getString(R.string.toast_reply_error) + networkHandler.getReason(), context)
                 _serverFeedback.value = ServerFeedback.FAILED
             } else if (userDetail.authorized) {
                 if (userDetail.todayUsage > userDetail.maxUsage) {
@@ -140,7 +141,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                 detail = detailCopy
             )
             if (reply == null) {
-                showToast("发生了错误：" + networkHandler.getReason(), context)
+                showToast(context.getString(R.string.toast_reply_error) + networkHandler.getReason(), context)
                 _serverFeedback.value = ServerFeedback.FAILED
             } else if ("unauthorized" == reply.status) {
                 _serverFeedback.value = ServerFeedback.UNAUTHORIZED
@@ -166,7 +167,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                         }
                         refreshBotList()
                     } else {
-                        showToast("发生了错误：" + reply.status, context)
+                        showToast(context.getString(R.string.toast_reply_error) + reply.status, context)
                     }
                 }
             }
@@ -189,7 +190,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
 
     fun clearMemory() {
         viewModelScope.launch {
-            _detail.value.summary = ""
+            _detail.value.summary = "None"
             val calendar = Calendar.getInstance()
             _detail.value.startTime = calendar
             _detail.value.summaryCutoff = calendar

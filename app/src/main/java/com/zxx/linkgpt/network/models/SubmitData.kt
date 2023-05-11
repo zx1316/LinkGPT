@@ -9,8 +9,8 @@ data class SubmitData(
     var userName: String,
     @JsonProperty("bot")
     var bot: String,
-    @JsonProperty("settings")
-    var settings: String,
+    @JsonProperty("setting")
+    var setting: String,
     @JsonProperty("use_template")
     var useTemplate: Boolean,
     @JsonProperty("history")

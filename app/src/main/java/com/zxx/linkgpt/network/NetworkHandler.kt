@@ -38,7 +38,7 @@ class NetworkHandler {
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(300, TimeUnit.SECONDS)
+        .readTimeout(270, TimeUnit.SECONDS)
         .retryOnConnectionFailure(false)
         .build()
     private val headers = Headers.Builder()
@@ -99,7 +99,7 @@ class NetworkHandler {
                 userName = user,
                 bot = detail.name,
                 summary = detail.summary,
-                settings = detail.settings,
+                setting = detail.setting,
                 useTemplate = detail.useTemplate,
                 history = history as ArrayList<BotHistoryData>,
                 temperature = detail.temperature,

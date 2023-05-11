@@ -214,7 +214,7 @@ fun Chat(
                     Spacer(modifier = Modifier.width(4.dp))
                     Button(
                         onClick = {
-                            if (exceedLen(input, 0.25, 2.0, 2000)) {
+                            if (exceedLen(input, 0.2, 1.2, 2000)) {
                                 errorType = ErrorType.CHAT_TOO_LONG
                                 inputError = true
                             } else {
