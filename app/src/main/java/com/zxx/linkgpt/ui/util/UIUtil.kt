@@ -128,7 +128,7 @@ fun AvatarChooser(context: Context, uri: Uri, callback: (Uri) -> Unit, defaultPa
                     modifier = imageModifier
                 )
             } else {
-                tryReadBitmap(context.contentResolver, uri)?.asImageBitmap()?.let {
+                tryGetThumbnail(context.contentResolver, uri)?.asImageBitmap()?.let {
                     Image(
                         bitmap = it,
                         contentDescription = null,
@@ -191,7 +191,7 @@ fun exceedLen(str: String, asciiLen: Double, nonAsciiLen: Double, limit: Int): B
 }
 
 fun saveBitmap(context: Context, uri: Uri, filename: String) {
-    val bitmap = tryReadBitmap(context.contentResolver, uri)
+    val bitmap = tryGetThumbnail(context.contentResolver, uri)
     if (bitmap != null) {
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
@@ -202,7 +202,7 @@ fun saveBitmap(context: Context, uri: Uri, filename: String) {
     }
 }
 
-private fun tryReadBitmap(contentResolver: ContentResolver, data: Uri): Bitmap? {
+private fun tryGetThumbnail(contentResolver: ContentResolver, data: Uri): Bitmap? {
     return try {
         val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(contentResolver, data)
