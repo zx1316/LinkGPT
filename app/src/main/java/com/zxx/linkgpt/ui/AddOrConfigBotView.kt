@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.zxx.linkgpt.MainActivity
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.util.AlertType
 import com.zxx.linkgpt.ui.util.AvatarChooser
@@ -51,7 +52,7 @@ import com.zxx.linkgpt.ui.util.ErrorType
 import com.zxx.linkgpt.ui.util.MyAlertDialog
 import com.zxx.linkgpt.ui.util.MyErrorDialog
 import com.zxx.linkgpt.ui.util.SingleLineInput
-import com.zxx.linkgpt.ui.util.exceedLen
+import com.zxx.linkgpt.ui.util.calcLen
 import com.zxx.linkgpt.ui.util.saveBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import java.io.File
@@ -168,10 +169,10 @@ fun AddOrConfigBot(
                                 } else if ("user" == name) {
                                     errorType = ErrorType.BOT_NAME_USER
                                     nameError = true
-                                } else if (exceedLen(name, 1.0, 2.0, 24)) {
+                                } else if (calcLen(name) > 24) {
                                     errorType = ErrorType.BOT_NAME_TOO_LONG
                                     nameError = true
-                                } else if (exceedLen(setting, 0.2, 1.2, if (useTemplate) 500 else 750)) {
+                                } else if (MainActivity.enc.countTokensOrdinary(setting) > if (useTemplate) 511 else 767) {
                                     errorType = ErrorType.SETTING_TOO_LONG
                                     settingError = true
                                 } else {

@@ -54,6 +54,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zxx.linkgpt.MainActivity
 import com.zxx.linkgpt.R
 import com.zxx.linkgpt.ui.theme.BottomBarWhite
 import com.zxx.linkgpt.ui.theme.MessageBlack
@@ -61,7 +62,6 @@ import com.zxx.linkgpt.ui.theme.MessageBlue
 import com.zxx.linkgpt.ui.util.Avatar
 import com.zxx.linkgpt.ui.util.ErrorType
 import com.zxx.linkgpt.ui.util.MyErrorDialog
-import com.zxx.linkgpt.ui.util.exceedLen
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import com.zxx.linkgpt.viewmodel.util.ShowType
 import java.io.FileNotFoundException
@@ -214,7 +214,7 @@ fun Chat(
                     Spacer(modifier = Modifier.width(4.dp))
                     Button(
                         onClick = {
-                            if (exceedLen(input, 0.2, 1.2, 2000)) {
+                            if (MainActivity.enc.countTokensOrdinary(input) > 2047) {
                                 errorType = ErrorType.CHAT_TOO_LONG
                                 inputError = true
                             } else {
