@@ -22,24 +22,19 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.Deflater
 
 class NetworkHandler {
-    companion object {
-        @JvmStatic
-        val MAPPER: ObjectMapper = ObjectMapper().registerModule(
-            KotlinModule.Builder()
-                .withReflectionCacheSize(512)
-                .configure(KotlinFeature.NullToEmptyCollection, false)
-                .configure(KotlinFeature.NullToEmptyMap, false)
-                .configure(KotlinFeature.NullIsSameAsDefault, false)
-                .configure(KotlinFeature.SingletonSupport, false)
-                .configure(KotlinFeature.StrictNullChecks, false)
-                .build()
-        )
-    }
-
+    private val mapper: ObjectMapper = ObjectMapper().registerModule(
+        KotlinModule.Builder()
+            .withReflectionCacheSize(512)
+            .configure(KotlinFeature.NullToEmptyCollection, false)
+            .configure(KotlinFeature.NullToEmptyMap, false)
+            .configure(KotlinFeature.NullIsSameAsDefault, false)
+            .configure(KotlinFeature.SingletonSupport, false)
+            .configure(KotlinFeature.StrictNullChecks, false)
+            .build()
+    )
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS)
         .readTimeout(270, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(false)
         .build()
     private val headers = Headers.Builder()
         .add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
@@ -58,22 +53,22 @@ class NetworkHandler {
      * Verify if the user is authorized and get the user's usage of tokens.
      * @author zx1316
      * @param user The user's name.
-     * @param host The server's hostname. Can be ipv4/ipv6/domain.
+     * @param host The server's hostname. Can be ipv4/domain(/ipv6?).
      * @param port The server's port.
      * @return If the connection fails, return null. Otherwise return the user's detail.
      * @see UserDetailData
      */
     suspend fun checkUser(user: String, host: String, port: Int): UserDetailData? =
         withContext(Dispatchers.IO) {
+            if ("" == host) {
+                reason = "connection_failed"
+                return@withContext null
+            }
             // Delete '=' at the end of the base64 string because the server can still parse it.
             // But why the output of fucking Android Base64.encodeToString has '\n'???
             val encoded = Base64.encodeToString(user.toByteArray(), Base64.URL_SAFE)
                 .replace("=", "")
                 .replace("\n", "")
-            if ("" == host) {
-                reason = "connection_failed"
-                return@withContext null
-            }
             val url = HttpUrl.Builder().scheme("http").host(host).port(port)
                 .addPathSegment("index.html")
                 .addQueryParameter("dat", encoded)
@@ -95,6 +90,10 @@ class NetworkHandler {
      */
     suspend fun getReply(host: String, port: Int, user: String, history: List<BotHistoryData>, detail: BotDetailData): ReplyData? =
         withContext(Dispatchers.IO) {
+            if ("" == host) {
+                reason = "connection_failed"
+                return@withContext null
+            }
             val submitData = SubmitData(
                 userName = user,
                 bot = detail.name,
@@ -108,15 +107,11 @@ class NetworkHandler {
                 frequencyPenalty = detail.frequencyPenalty,
                 summaryCutoff = detail.summaryCutoff
             )
-            if ("" == host) {
-                reason = "connection_failed"
-                return@withContext null
-            }
             val url = HttpUrl.Builder().scheme("http").host(host).port(port).addPathSegment("index.html").build()
             // To simplify, we don't use a ByteArrayOutputStream.
             val deflater = Deflater(6, true)
             val buf = ByteArray(8192)              // Big enough for this application
-            deflater.setInput(MAPPER.writeValueAsBytes(submitData))
+            deflater.setInput(mapper.writeValueAsBytes(submitData))
             deflater.finish()
             val len = deflater.deflate(buf)
             deflater.end()
@@ -150,11 +145,9 @@ class NetworkHandler {
                     reason = "bad_webpage"
                     return null
                 }
-                val startPos = startResult.first + startMatch.length
-                val endPos = endResult.first
-                val raw = webpage.substring(startPos, endPos)
+                val raw = webpage.substring(startResult.first + startMatch.length, endResult.first)
                 return try {
-                    MAPPER.readValue(String(Base64.decode(raw, Base64.DEFAULT)), clazz)
+                    mapper.readValue(String(Base64.decode(raw, Base64.DEFAULT)), clazz)
                 } catch (e: Exception) {
                     reason = "bad_format"
                     null
@@ -163,6 +156,7 @@ class NetworkHandler {
             reason = "empty_response"
             return null
         } catch (e: IOException) {
+            e.printStackTrace()
             reason = "connection_failed"
             return null
         }
