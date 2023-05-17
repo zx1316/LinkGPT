@@ -153,8 +153,8 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
                 } else {
                     _serverFeedback.value = ServerFeedback.OK
                     if ("ok" == reply.status) {
-                        if ("" != reply.newSummary) {
-                            detailCopy.summary = reply.newSummary
+                        if ("" != reply.summary) {
+                            detailCopy.summary = reply.summary
                         }
                         detailCopy.lastUsage = reply.lastUsage
                         detailCopy.totalUsage += reply.lastUsage

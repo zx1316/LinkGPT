@@ -8,8 +8,8 @@ data class ReplyData(
     var status: String,
     @JsonProperty("message")
     var message: String,
-    @JsonProperty("new_summary")
-    var newSummary: String,
+    @JsonProperty("summary")
+    var summary: String,
     @JsonProperty("start_time")
     var startTime: Calendar,
     @JsonProperty("summary_cutoff")
