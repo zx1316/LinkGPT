@@ -20,14 +20,12 @@ interface LinkGPTDao {
     @Insert
     suspend fun newBot(botDetailData: BotDetailData)
 
-    @Query(
-        "SELECT detail_table.name, history_table.output, history_table.time " +
-                "FROM detail_table LEFT OUTER JOIN (" +
-                "history_table JOIN (" +
-                "SELECT name, MAX(time) AS max_time FROM history_table GROUP BY name" +
-                ") tmp ON history_table.name = tmp.name AND history_table.time = tmp.max_time" +
-                ") ON detail_table.name = history_table.name ORDER BY history_table.time DESC"
-    )
+    @Query("SELECT detail_table.name, history_table.output, history_table.time " +
+            "FROM detail_table LEFT OUTER JOIN (" +
+            "history_table JOIN (" +
+            "SELECT name, MAX(time) AS max_time FROM history_table GROUP BY name" +
+            ") tmp ON history_table.name = tmp.name AND history_table.time = tmp.max_time" +
+            ") ON detail_table.name = history_table.name ORDER BY history_table.time DESC")
     suspend fun getBotList(): List<BotBriefData>
 
     @Insert

@@ -142,9 +142,7 @@ fun ListBot(
             )
         },
         content = {
-            LazyColumn(modifier = Modifier
-                .fillMaxSize()
-                .padding(it)) {
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(it)) {
                 items(items = botList) { briefData ->
                     BotCard(
                         briefData = briefData,

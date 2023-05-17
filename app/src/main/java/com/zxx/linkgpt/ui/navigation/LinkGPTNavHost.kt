@@ -4,38 +4,41 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.zxx.linkgpt.ui.AddOrConfigBot
 import com.zxx.linkgpt.ui.Chat
 import com.zxx.linkgpt.ui.ListBot
 import com.zxx.linkgpt.ui.UserConfig
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun LinkGPTNavHost(navController: NavHostController, vm: LinkGPTViewModel) {
+fun LinkGPTNavHost(
+    navController: NavHostController = rememberAnimatedNavController(),
+    vm: LinkGPTViewModel = viewModel()
+) {
     val left = AnimatedContentTransitionScope.SlideDirection.Left
     val right = AnimatedContentTransitionScope.SlideDirection.Right
     val duration = 400
 
-    @OptIn(ExperimentalAnimationApi::class)
     AnimatedNavHost(navController = navController, startDestination = ListBot.route) {
         composable(
             route = ListBot.route,
             exitTransition = {
-                if (targetState.destination.route == UserConfig.route) {
-                    slideOutOfContainer(towards = right, animationSpec = tween(duration))
-                } else {
-                    slideOutOfContainer(towards = left, animationSpec = tween(duration))
-                }
+                slideOutOfContainer(
+                    towards = if (targetState.destination.route == UserConfig.route) right else left,
+                    animationSpec = tween(duration)
+                )
             },
             popEnterTransition = {
-                if (initialState.destination.route == UserConfig.route) {
-                    slideIntoContainer(towards = left, animationSpec = tween(duration))
-                } else {
-                    slideIntoContainer(towards = right, animationSpec = tween(duration))
-                }
+                slideIntoContainer(
+                    towards = if (initialState.destination.route == UserConfig.route) left else right,
+                    animationSpec = tween(duration)
+                )
             }
         ) {
             ListBot(

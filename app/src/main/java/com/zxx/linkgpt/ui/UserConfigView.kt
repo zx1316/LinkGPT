@@ -28,7 +28,7 @@ import com.zxx.linkgpt.ui.util.ErrorType
 import com.zxx.linkgpt.ui.util.MyAlertDialog
 import com.zxx.linkgpt.ui.util.MyErrorDialog
 import com.zxx.linkgpt.ui.util.SingleLineInput
-import com.zxx.linkgpt.ui.util.exceedLen
+import com.zxx.linkgpt.ui.util.calcLen
 import com.zxx.linkgpt.ui.util.saveBitmap
 import com.zxx.linkgpt.viewmodel.LinkGPTViewModel
 import java.io.File
@@ -125,7 +125,7 @@ fun UserConfig(
                             if ("" == name) {
                                 errorType = ErrorType.USER_NAME_EMPTY
                                 nameError = true
-                            } else if (exceedLen(name, 1.0, 2.0, 24)) {
+                            } else if (calcLen(name) > 24) {
                                 errorType = ErrorType.USER_NAME_TOO_LONG
                                 nameError = true
                             } else if ("" == host) {

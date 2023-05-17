@@ -7,13 +7,11 @@ import java.util.Locale
 class TimeDisplayUtil {
     companion object {
         @JvmStatic
-        val sdfHM = SimpleDateFormat("h:mm", Locale.CHINA)
-
+        private val sdfHM = SimpleDateFormat("h:mm", Locale.CHINA)
         @JvmStatic
-        val sdfE = SimpleDateFormat("E", Locale.CHINA)
-
+        private val sdfE = SimpleDateFormat("E", Locale.CHINA)
         @JvmStatic
-        val sdfYMD = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
+        private val sdfYMD = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
 
         @JvmStatic
         fun formatTime(calendar: Calendar): String {

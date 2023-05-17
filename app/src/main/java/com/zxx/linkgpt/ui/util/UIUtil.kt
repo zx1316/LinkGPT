@@ -182,12 +182,12 @@ fun Avatar(bytes: ByteArray?, defaultPainter: Painter, size: Dp, clickCallback: 
     }
 }
 
-fun exceedLen(str: String, asciiLen: Double, nonAsciiLen: Double, limit: Int): Boolean {
-    var cnt = 0.0
+fun calcLen(str: String): Int {
+    var cnt = 0
     for (ch in str) {
-        cnt += if (ch < 128.toChar()) asciiLen else nonAsciiLen
+        cnt += if (ch < 128.toChar()) 1 else 2
     }
-    return cnt > limit
+    return cnt
 }
 
 fun saveBitmap(context: Context, uri: Uri, filename: String) {
