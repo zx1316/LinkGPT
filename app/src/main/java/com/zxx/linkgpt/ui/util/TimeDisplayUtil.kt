@@ -14,27 +14,28 @@ class TimeDisplayUtil {
         private val sdfYMD = SimpleDateFormat("yyyy-MM-dd", Locale.CHINA)
 
         @JvmStatic
-        fun formatTime(calendar: Calendar): String {
-            val cCalendar = Calendar.getInstance()
-            val yCalendar = Calendar.getInstance()
-            yCalendar.add(Calendar.DATE, -1)
-            return if (cCalendar.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR) && cCalendar.get(Calendar.YEAR) == calendar.get(Calendar.YEAR)) {
-                getPrefix(calendar.get(Calendar.HOUR_OF_DAY)) + sdfHM.format(calendar.time)
-            } else if (yCalendar.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR) && yCalendar.get(Calendar.YEAR) == calendar.get(Calendar.YEAR)) {
-                "昨天 " + getPrefix(calendar.get(Calendar.HOUR_OF_DAY)) + sdfHM.format(calendar.time)
-            } else if (calendar.get(Calendar.WEEK_OF_YEAR) == cCalendar.get(Calendar.WEEK_OF_YEAR) && calendar.get(Calendar.YEAR) == cCalendar.get(Calendar.YEAR)) {
-                sdfE.format(calendar.time)
+        fun formatTime(calendar: Calendar, detail: Boolean): String {
+            val calendar1 = Calendar.getInstance()
+            calendar1.set(Calendar.HOUR_OF_DAY, 0)
+            calendar1.set(Calendar.MINUTE, 0)
+            calendar1.set(Calendar.SECOND, 0)
+            calendar1.set(Calendar.MILLISECOND, 0)
+            val diffTime = calendar1.timeInMillis - calendar.timeInMillis
+            return if (diffTime <= 0L) {
+                getHMWithPrefix(calendar)
+            } else if (diffTime <= 86400000L) {
+                "昨天 " + getHMWithPrefix(calendar)
+            } else if (diffTime <= 518400000L) {
+                sdfE.format(calendar.time) + " " + getHMWithPrefix(calendar)
             } else {
-                sdfYMD.format(calendar.time)
+                sdfYMD.format(calendar.time) + if (detail) " " + getHMWithPrefix(calendar) else ""
             }
         }
 
         @JvmStatic
-        private fun getPrefix(h: Int): String {
-            return if (h >= 18) "晚上"
-            else if (h >= 12) "下午"
-            else if (h >= 6) "上午"
-            else "凌晨"
+        private fun getHMWithPrefix(calendar: Calendar): String {
+            val h = calendar.get(Calendar.HOUR_OF_DAY)
+            return (if (h >= 18) "晚上" else if (h >= 12) "下午" else if (h >= 6) "上午" else "凌晨") + sdfHM.format(calendar.time)
         }
     }
 }

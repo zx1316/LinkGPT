@@ -3,7 +3,6 @@ package com.zxx.linkgpt.viewmodel
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zxx.linkgpt.R
@@ -26,9 +25,9 @@ import java.util.Calendar
 class LinkGPTViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
     private val context = application.applicationContext
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("com.zxx.linkgpt.PREFERENCE_FILE_KEY", Context.MODE_PRIVATE)
+    private val sharedPreferences = context.getSharedPreferences("com.zxx.linkgpt.PREFERENCE_FILE_KEY", Context.MODE_PRIVATE)
     private val linkGPTDao = LinkGPTDatabase.getDatabase(application).linkGPTDao()
-    private val repository: LinkGPTRepository = LinkGPTRepository(linkGPTDao)
+    private val repository = LinkGPTRepository(linkGPTDao)
     private val networkHandler = NetworkHandler()
 
     private val _botList = MutableStateFlow(ArrayList<BotBriefData>())
@@ -225,7 +224,7 @@ class LinkGPTViewModel(application: Application) : AndroidViewModel(application)
             val historyArr = repository.getHistory(name)
             val displayedHistoryArr = ArrayList<DisplayedHistoryData>()
             for (dat in historyArr) {
-                val newTimeStr = TimeDisplayUtil.formatTime(dat.time)
+                val newTimeStr = TimeDisplayUtil.formatTime(dat.time, true)
                 if (newTimeStr != timeStr) {
                     displayedHistoryArr.add(DisplayedHistoryData(ShowType.TIME, newTimeStr))
                     timeStr = newTimeStr

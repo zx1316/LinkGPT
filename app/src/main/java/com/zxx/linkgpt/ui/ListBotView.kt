@@ -183,7 +183,7 @@ fun BotCard(briefData: BotBriefData, chatWith: String?, callback: () -> Unit) {
                     maxLines = 1
                 )
                 Text(
-                    text = TimeDisplayUtil.formatTime(briefData.time),
+                    text = TimeDisplayUtil.formatTime(briefData.time, false),
                     style = Typography.caption.copy(color = Color.Gray),
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
