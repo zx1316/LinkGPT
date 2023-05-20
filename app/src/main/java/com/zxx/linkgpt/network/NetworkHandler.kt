@@ -110,7 +110,7 @@ class NetworkHandler {
             val url = HttpUrl.Builder().scheme("http").host(host).port(port).addPathSegment("index.html").build()
             // To simplify, we don't use a ByteArrayOutputStream.
             val deflater = Deflater(6, true)
-            val buf = ByteArray(8192)              // Big enough for this application
+            val buf = ByteArray(16384)              // Big enough for this application
             deflater.setInput(mapper.writeValueAsBytes(submitData))
             deflater.finish()
             val len = deflater.deflate(buf)
